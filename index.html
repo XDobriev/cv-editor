@@ -10,38 +10,33 @@
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #FCFAF7;
-    --ink: #211C18;
-    --ink2: #4A4039;
-    --muted: #8C8076;
-    --line: #E7DED5;
-    --accent: #BF5A36;
-    --accent-deep: #934026;
-    --accent-line: rgba(191,90,54,.32);
-    --accent-tint: #F5E7DF;
-    --bg: #E9E5DF;
+    --bg: #0A0A0C;
+    --surf: #151517;
+    --ink: #fff;
+    --text: #B0ADA8;
+    --muted: #7A7772;
+    --line: #252527;
+    --accent: #FF6B35;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
     padding: 0;
-    background: var(--paper);
-    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  /* placeholder-боксы (фото / скриншоты) — текст берём из атрибута placeholder */
   image-slot {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-tint);
+    background: var(--surf);
     color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: .04em;
+    font-size: 12px;
     overflow: hidden;
   }
   image-slot::after { content: attr(placeholder); padding: 8px; text-align: center; }

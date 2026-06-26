@@ -1,160 +1,163 @@
 /* global React, RESUME_DATA, PORTFOLIO, buildHref, inlineRich */
-// Лендинг-портфолио в эстетике «C / Dev». Читает единый источник данных
-// (resume-data.js) и общие хелперы (resume-render.js) — никаких своих копий.
 (function () {
   if (!document.getElementById('cv-styles')) {
     const s = document.createElement('style');
     s.id = 'cv-styles';
     s.textContent = `
-    .cv{font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--paper);
-      -webkit-font-smoothing:antialiased;line-height:1.5;}
-    .cv-mono{font-family:'IBM Plex Mono',monospace;}
-    .cv-wrap{max-width:960px;margin:0 auto;padding:0 32px;box-sizing:border-box;}
+    .cv{font-family:'Manrope',sans-serif;color:var(--ink);background:var(--bg);
+      -webkit-font-smoothing:antialiased;line-height:1.6;}
 
     /* top bar */
-    .cv-top{position:sticky;top:0;z-index:20;background:rgba(252,250,247,.86);
-      backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
-    .cv-top-in{max-width:960px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;
+    .cv-top{position:sticky;top:0;z-index:20;background:rgba(10,10,12,.92);
+      backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+    .cv-top-in{max-width:1060px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;
       justify-content:space-between;box-sizing:border-box;}
-    .cv-brand{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);}
+    .cv-brand{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em;}
     .cv-brand .dot{color:var(--accent);}
-    .cv-nav{display:flex;gap:24px;}
-    .cv-nav a{font-size:13px;color:var(--ink2);text-decoration:none;transition:color .15s;}
-    .cv-nav a:hover{color:var(--accent);}
-    .cv-dl{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent-deep);
-      border:1px solid var(--accent-line);border-radius:5px;padding:6px 13px;text-decoration:none;
-      transition:background .15s,color .15s;}
-    .cv-dl:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .cv-nav{display:flex;gap:28px;}
+    .cv-nav a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .15s;font-weight:500;}
+    .cv-nav a:hover{color:#fff;}
+    .cv-dl{font-size:13px;font-weight:600;color:var(--accent);
+      border:1.5px solid var(--accent);border-radius:8px;padding:8px 18px;text-decoration:none;
+      transition:background .2s,color .2s;}
+    .cv-dl:hover{background:var(--accent);color:#fff;}
 
     /* hero */
-    .cv-hero{padding:90px 0 64px;border-bottom:1px solid var(--line);}
-    .cv-hero-grid{display:grid;grid-template-columns:1fr 200px;gap:48px;align-items:center;}
-    .cv-tagline{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--accent);margin-bottom:18px;}
-    .cv-tagline .br{color:var(--muted);}
-    .cv-h1{font-size:64px;font-weight:600;line-height:1;letter-spacing:-.03em;margin:0 0 18px;}
-    .cv-role{font-size:19px;color:var(--ink2);font-weight:500;margin-bottom:26px;}
-    .cv-role b{color:var(--accent-deep);font-weight:600;}
-    .cv-hero-meta{display:flex;flex-wrap:wrap;gap:10px 10px;}
-    .cv-pill{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink2);
-      border:1px solid var(--line);border-radius:999px;padding:6px 14px;text-decoration:none;
-      display:inline-flex;align-items:center;gap:7px;transition:border-color .15s,color .15s;background:#fff;}
-    .cv-pill:hover{border-color:var(--accent-line);color:var(--accent-deep);}
+    .cv-hero{padding:100px 0 80px;background:var(--bg);}
+    .cv-wrap{max-width:1060px;margin:0 auto;padding:0 32px;box-sizing:border-box;}
+    .cv-hero-grid{display:grid;grid-template-columns:1fr 220px;gap:56px;align-items:center;}
+    .cv-label{display:inline-block;font-size:13px;font-weight:700;color:var(--accent);
+      background:rgba(255,107,53,.12);padding:6px 16px;border-radius:6px;margin-bottom:24px;
+      letter-spacing:.01em;}
+    .cv-h1{font-size:clamp(2.8rem,5vw,4.5rem);font-weight:800;line-height:1.04;letter-spacing:-.03em;
+      margin:0 0 20px;color:#fff;text-wrap:balance;}
+    .cv-role{font-size:18px;color:var(--text);font-weight:400;margin-bottom:28px;line-height:1.5;
+      max-width:50ch;}
+    .cv-role strong{color:#fff;font-weight:700;}
+    .cv-hero-meta{display:flex;flex-wrap:wrap;gap:10px;}
+    .cv-pill{font-size:13px;font-weight:500;color:var(--text);
+      border:1px solid var(--line);border-radius:999px;padding:8px 16px;text-decoration:none;
+      display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,color .15s;
+      background:var(--surf);}
+    .cv-pill:hover{border-color:var(--accent);color:#fff;}
     .cv-pill .k{color:var(--muted);}
-    .cv-photo{width:200px;height:200px;border:1px solid var(--line);box-shadow:0 10px 40px rgba(60,30,15,.12);}
-    img.cv-photo{object-fit:cover;object-position:center;border-radius:14px;}
+    .cv-photo{width:220px;height:220px;border-radius:16px;border:2px solid var(--line);
+      box-shadow:0 16px 48px rgba(0,0,0,.4);object-fit:cover;object-position:center;}
 
-    /* metrics strip */
-    .cv-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
-      border-bottom:1px solid var(--line);}
-    .cv-metric{background:var(--paper);padding:30px 26px;}
-    .cv-metric .v{font-size:34px;font-weight:600;letter-spacing:-.02em;color:var(--accent-deep);
-      font-variant-numeric:tabular-nums;line-height:1;}
-    .cv-metric .l{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.4;}
+    /* impact strip — вместо hero-metric template */
+    .cv-impact{padding:48px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+    .cv-impact-text{font-size:17px;color:var(--text);line-height:1.7;max-width:72ch;}
+    .cv-impact-text strong{color:#fff;font-weight:700;}
+    .cv-impact-text .num{color:var(--accent);font-weight:800;}
 
     /* sections */
     .cv-sec{padding:72px 0;border-bottom:1px solid var(--line);}
-    .cv-sec-h{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.12em;
-      text-transform:uppercase;color:var(--ink);font-weight:600;margin:0 0 36px;display:flex;align-items:center;gap:10px;}
-    .cv-sec-h .idx{color:var(--accent);}
-    .cv-sec-h:after{content:'';flex:1;height:1px;background:var(--line);}
+    .cv-sec-h{font-size:28px;font-weight:800;color:#fff;margin:0 0 40px;letter-spacing:-.02em;}
+    .cv-sec-h .accent{color:var(--accent);}
 
-    .cv-about{font-size:20px;line-height:1.6;color:var(--ink2);max-width:42ch;font-weight:400;}
-    .cv-about b{color:var(--ink);font-weight:600;}
+    .cv-about{font-size:19px;line-height:1.7;color:var(--text);max-width:56ch;font-weight:400;}
+    .cv-about strong{color:#fff;font-weight:700;}
 
     /* projects */
-    .cv-proj{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-bottom:64px;}
+    .cv-proj{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-bottom:72px;}
     .cv-proj:last-child{margin-bottom:0;}
     .cv-proj.rev .cv-proj-media{order:2;}
-    .cv-proj-media image-slot,.cv-proj-media img{width:100%;aspect-ratio:4/3;border:1px solid var(--line);
-      border-radius:10px;box-shadow:0 8px 30px rgba(60,30,15,.10);}
+    .cv-proj-media img,.cv-proj-media image-slot{width:100%;aspect-ratio:4/3;border:1px solid var(--line);
+      border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.3);}
     .cv-proj-media img{display:block;object-fit:cover;object-position:top;}
-    .cv-proj-head{display:flex;align-items:center;gap:12px;margin-bottom:5px;}
-    .cv-proj-name{font-size:27px;font-weight:600;letter-spacing:-.02em;}
-    .cv-proj-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);
-      border:1px solid var(--accent-line);border-radius:3px;padding:2px 8px;}
+    .cv-proj-head{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
+    .cv-proj-name{font-size:24px;font-weight:800;letter-spacing:-.02em;color:#fff;}
+    .cv-proj-status{font-size:12px;font-weight:600;color:var(--accent);
+      border:1px solid rgba(255,107,53,.3);border-radius:6px;padding:3px 10px;
+      background:rgba(255,107,53,.08);}
     .cv-proj-tag{font-size:15px;color:var(--muted);margin-bottom:16px;}
-    .cv-proj-desc{font-size:15px;line-height:1.6;color:var(--ink2);margin:0 0 14px;}
-    .cv-proj-points{list-style:none;margin:0 0 16px;padding:0;}
-    .cv-proj-points li{font-size:14px;line-height:1.5;color:var(--ink2);padding-left:20px;
-      position:relative;margin-bottom:7px;}
-    .cv-proj-points li:before{content:'→';position:absolute;left:0;color:var(--accent);
-      font-family:'IBM Plex Mono',monospace;}
-    .cv-proj-stack{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
-    .cv-stack-chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink2);
-      border:1px solid var(--line);border-radius:4px;padding:3px 9px;background:#fff;white-space:nowrap;}
-    .cv-proj-links{display:flex;flex-wrap:wrap;gap:18px;}
-    .cv-proj-links a{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--accent-deep);
-      text-decoration:none;border-bottom:1px solid var(--accent-line);padding-bottom:1px;}
-    .cv-proj-links a:hover{color:var(--accent);}
+    .cv-proj-desc{font-size:15px;line-height:1.65;color:var(--text);margin:0 0 16px;}
+    .cv-proj-points{list-style:none;margin:0 0 18px;padding:0;}
+    .cv-proj-points li{font-size:14px;line-height:1.55;color:var(--text);padding-left:22px;
+      position:relative;margin-bottom:8px;}
+    .cv-proj-points li:before{content:'';position:absolute;left:0;top:8px;width:8px;height:2px;
+      background:var(--accent);border-radius:1px;}
+    .cv-proj-stack{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+    .cv-stack-chip{font-size:12px;font-weight:600;color:var(--text);
+      border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--surf);
+      white-space:nowrap;}
+    .cv-proj-links{display:flex;flex-wrap:wrap;gap:20px;}
+    .cv-proj-links a{font-size:13px;font-weight:600;color:var(--accent);
+      text-decoration:none;border-bottom:1.5px solid rgba(255,107,53,.3);padding-bottom:2px;
+      transition:border-color .15s;}
+    .cv-proj-links a:hover{border-bottom-color:var(--accent);}
 
     /* experience */
-    .cv-exp{display:grid;grid-template-columns:160px 1fr;gap:32px;padding:26px 0;border-top:1px solid var(--line);}
+    .cv-exp{display:grid;grid-template-columns:140px 1fr;gap:32px;padding:28px 0;
+      border-top:1px solid var(--line);}
     .cv-exp:first-of-type{border-top:0;padding-top:0;}
-    .cv-exp-when{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);padding-top:3px;}
-    .cv-exp-org{font-size:18px;font-weight:600;color:var(--ink);}
-    .cv-exp-unit{font-size:13px;color:var(--muted);margin-top:2px;}
-    .cv-exp-title{font-size:14.5px;color:var(--accent-deep);font-weight:500;margin:8px 0 12px;}
+    .cv-exp-when{font-size:13px;font-weight:600;color:var(--muted);padding-top:4px;}
+    .cv-exp-org{font-size:18px;font-weight:700;color:#fff;}
+    .cv-exp-unit{font-size:13px;color:var(--muted);margin-top:3px;}
+    .cv-exp-title{font-size:15px;color:var(--accent);font-weight:600;margin:6px 0 12px;}
     .cv-exp-points{list-style:none;margin:0;padding:0;}
-    .cv-exp-points li{font-size:14px;line-height:1.55;color:var(--ink2);padding-left:20px;position:relative;margin-bottom:8px;}
-    .cv-exp-points li:before{content:'';position:absolute;left:0;top:8px;width:5px;height:5px;
-      background:var(--accent);transform:rotate(45deg);}
-    .cv-exp-points b{color:var(--ink);font-weight:700;}
+    .cv-exp-points li{font-size:14px;line-height:1.6;color:var(--text);padding-left:22px;
+      position:relative;margin-bottom:8px;}
+    .cv-exp-points li:before{content:'';position:absolute;left:0;top:9px;width:8px;height:2px;
+      background:var(--accent);border-radius:1px;}
+    .cv-exp-points b{color:#fff;font-weight:700;}
 
     /* tech grid */
-    .cv-tech{display:grid;grid-template-columns:repeat(2,1fr);gap:28px 48px;}
-    .cv-tech-h{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent-deep);margin-bottom:12px;}
-    .cv-tech-h:before{content:'# ';color:var(--accent);}
+    .cv-tech{display:grid;grid-template-columns:repeat(2,1fr);gap:32px 56px;}
+    .cv-tech-h{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:14px;
+      text-transform:lowercase;}
     .cv-tech-chips{display:flex;flex-wrap:wrap;gap:8px;}
-    .cv-tech-chip{font-size:13.5px;color:var(--ink);border:1px solid var(--line);border-radius:6px;
-      padding:5px 12px;background:#fff;}
+    .cv-tech-chip{font-size:13px;font-weight:500;color:var(--text);border:1px solid var(--line);
+      border-radius:8px;padding:6px 14px;background:var(--surf);}
 
     /* education + languages */
     .cv-two{display:grid;grid-template-columns:1.4fr 1fr;gap:56px;}
-    .cv-edu{padding:16px 0;border-top:1px solid var(--line);}
+    .cv-edu{padding:18px 0;border-top:1px solid var(--line);}
     .cv-edu:first-child{border-top:0;padding-top:0;}
-    .cv-edu-school{font-size:16px;font-weight:600;}
-    .cv-edu-prog{font-size:13.5px;color:var(--ink2);line-height:1.45;margin:3px 0;}
-    .cv-edu-when{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);}
-    .cv-lang{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);}
+    .cv-edu-school{font-size:16px;font-weight:700;color:#fff;}
+    .cv-edu-prog{font-size:14px;color:var(--text);line-height:1.5;margin:4px 0;}
+    .cv-edu-when{font-size:12px;font-weight:600;color:var(--muted);}
+    .cv-lang{display:flex;justify-content:space-between;padding:14px 0;
+      border-bottom:1px solid var(--line);}
     .cv-lang:last-child{border-bottom:0;}
-    .cv-lang .l{font-size:15px;font-weight:500;}
-    .cv-lang .v{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);}
+    .cv-lang .l{font-size:15px;font-weight:600;color:#fff;}
+    .cv-lang .v{font-size:14px;color:var(--muted);}
 
-    /* contact / footer */
-    .cv-foot{padding:80px 0 70px;text-align:center;}
-    .cv-foot-h{font-size:38px;font-weight:600;letter-spacing:-.02em;margin:0 0 12px;}
-    .cv-foot-sub{font-size:16px;color:var(--ink2);margin-bottom:30px;}
+    /* footer */
+    .cv-foot{padding:80px 0 72px;text-align:center;}
+    .cv-foot-h{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;letter-spacing:-.02em;
+      margin:0 0 14px;color:#fff;text-wrap:balance;}
+    .cv-foot-sub{font-size:16px;color:var(--text);margin-bottom:32px;}
     .cv-foot-links{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
-    .cv-foot-copy{margin-top:54px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);}
+    .cv-foot-copy{margin-top:56px;font-size:12px;color:var(--muted);}
+
+    @media (prefers-reduced-motion:reduce){.cv *{transition-duration:0s !important;animation:none !important;}}
 
     @media (max-width:760px){
       .cv-hero-grid{grid-template-columns:1fr;gap:32px;}
-      .cv-photo{width:150px;height:150px;order:-1;}
-      .cv-h1{font-size:46px;}
-      .cv-metrics{grid-template-columns:repeat(2,1fr);}
-      .cv-proj,.cv-proj.rev{grid-template-columns:1fr;gap:20px;}
+      .cv-photo{width:160px;height:160px;order:-1;}
+      .cv-h1{font-size:clamp(2rem,8vw,3rem);}
+      .cv-proj,.cv-proj.rev{grid-template-columns:1fr;gap:24px;}
       .cv-proj.rev .cv-proj-media{order:0;}
       .cv-exp{grid-template-columns:1fr;gap:8px;}
-      .cv-tech,.cv-two{grid-template-columns:1fr;gap:24px;}
+      .cv-tech,.cv-two{grid-template-columns:1fr;gap:28px;}
       .cv-nav{display:none;}
     }
     `;
     document.head.appendChild(s);
   }
 
-  // иконка контакта по его ключу из формата редактора
   function iconFor(key) {
     const k = (key || '').toLowerCase();
-    if (/mail|email|почт/.test(k)) return '✉';
-    if (/tel|phone|тел/.test(k))   return '☎';
-    if (/tg|telegram|телег/.test(k)) return '◇';
-    if (/git/.test(k))             return '⌘';
-    if (/web|site|сайт/.test(k))   return '↗';
-    if (/loc|город|где|адрес/.test(k)) return '◉';
+    if (/mail|email/.test(k)) return '✉';
+    if (/tel|phone/.test(k)) return '☎';
+    if (/tg|telegram/.test(k)) return '◇';
+    if (/git/.test(k)) return '⌘';
+    if (/web|site/.test(k)) return '↗';
+    if (/loc|город|где/.test(k)) return '◉';
     return '·';
   }
 
-  // контакты из формата редактора {key,value} → {icon,label,href}
   function contacts() {
     return RESUME_DATA.contacts
       .filter(c => (c.value || '').trim())
@@ -172,15 +175,12 @@
     const d = RESUME_DATA;
     const e = React.createElement;
     const cs = contacts();
-    const aboutHTML = inlineRich(d.about)
-      .replace('AvtorStudio', '<b>AvtorStudio</b>')
-      .replace('полный цикл', '<b>полный цикл</b>');
 
     return e('div', { className: 'cv' },
       // top bar
       e('div', { className: 'cv-top' },
         e('div', { className: 'cv-top-in' },
-          e('div', { className: 'cv-brand' }, 'ХД', e('span', { className: 'dot' }, '.'), e('span', { className: 'cv-mono' }, 'dev')),
+          e('div', { className: 'cv-brand' }, 'ХД', e('span', { className: 'dot' }, '.')),
           e('nav', { className: 'cv-nav' },
             e('a', { href: '#projects' }, 'Проекты'),
             e('a', { href: '#experience' }, 'Опыт'),
@@ -195,35 +195,45 @@
         e('div', { className: 'cv-wrap' },
           e('div', { className: 'cv-hero-grid' },
             e('div', null,
-              e('div', { className: 'cv-tagline' },
-                e('span', { className: 'br' }, '<'), d.profile.tagline, e('span', { className: 'br' }, ' />')),
-              e('h1', { className: 'cv-h1' }, 'Хамзат', e('br'), 'Добриев'),
-              e('div', { className: 'cv-role', dangerouslySetInnerHTML: { __html: 'Frontend-разработчик с <b>живым продуктом в продакшне</b> — Назрань · удалённо · готов к релокации' } }),
+              e('span', { className: 'cv-label' }, 'React · TypeScript · 4+ года'),
+              e('h1', { className: 'cv-h1' }, 'Хамзат Добриев'),
+              e('div', { className: 'cv-role' },
+                'Frontend-разработчик с ',
+                e('strong', null, 'живым продуктом в продакшне'),
+                ' — Назрань · удалённо · готов к релокации'),
               e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
             ),
             PORTFOLIO.photo
               ? e('img', { className: 'cv-photo', src: PORTFOLIO.photo, alt: 'Хамзат Добриев' })
-              : e('image-slot', { id: 'cv-photo', class: 'cv-photo', placeholder: 'фото' }),
+              : e('image-slot', { class: 'cv-photo', placeholder: 'фото' }),
           ),
         ),
       ),
-      // metrics
-      e('div', { className: 'cv-metrics' },
-        PORTFOLIO.metrics.map((m, i) => e('div', { className: 'cv-metric', key: i },
-          e('div', { className: 'v' }, m.value),
-          e('div', { className: 'l' }, m.label))),
+      // impact strip — метрики вплетены в текст вместо hero-metric template
+      e('div', { className: 'cv-impact' },
+        e('div', { className: 'cv-wrap' },
+          e('p', { className: 'cv-impact-text', dangerouslySetInnerHTML: { __html:
+            'На курорте Армхи автоматизировал ключевые процессы: ' +
+            'сократил ожидание гостя на ресепшене на <strong class="num">10 минут</strong>, ' +
+            'снизил нагрузку колл-центра на <strong class="num">90%</strong>, ' +
+            'сэкономил бизнесу <strong class="num">40 000 ₽/мес</strong> на интеграции. ' +
+            '<strong>4+ года</strong> на стыке бизнеса и разработки.'
+          }}),
+        ),
       ),
       // about
       e('section', { className: 'cv-sec' },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '00'), 'О себе'),
-          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: aboutHTML } }),
+          e('h2', { className: 'cv-sec-h' }, 'О ', e('span', { className: 'accent' }, 'себе')),
+          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: inlineRich(d.about)
+            .replace('AvtorStudio', '<strong>AvtorStudio</strong>')
+            .replace('полный цикл', '<strong>полный цикл</strong>') } }),
         ),
       ),
       // projects
       e('section', { className: 'cv-sec', id: 'projects' },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '01'), 'Проекты'),
+          e('h2', { className: 'cv-sec-h' }, 'Про', e('span', { className: 'accent' }, 'екты')),
           PORTFOLIO.projects.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
             e('div', { className: 'cv-proj-media' },
               p.img
@@ -246,7 +256,7 @@
       // experience
       e('section', { className: 'cv-sec', id: 'experience' },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '02'), 'Опыт работы'),
+          e('h2', { className: 'cv-sec-h' }, 'Опыт ', e('span', { className: 'accent' }, 'работы')),
           d.experience.map((x, i) => {
             const bullets = (x.bullets || '').split('\n').map(b => b.trim()).filter(Boolean);
             return e('div', { className: 'cv-exp', key: i },
@@ -265,7 +275,7 @@
       // stack
       e('section', { className: 'cv-sec', id: 'stack' },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '03'), 'Технологии'),
+          e('h2', { className: 'cv-sec-h' }, 'Техно', e('span', { className: 'accent' }, 'логии')),
           e('div', { className: 'cv-tech' },
             d.tech.map((g, i) => e('div', { key: i },
               e('div', { className: 'cv-tech-h' }, g.group.toLowerCase()),
@@ -281,14 +291,14 @@
         e('div', { className: 'cv-wrap' },
           e('div', { className: 'cv-two' },
             e('div', null,
-              e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '04'), 'Образование'),
+              e('h2', { className: 'cv-sec-h' }, 'Обра', e('span', { className: 'accent' }, 'зование')),
               d.education.map((ed, i) => e('div', { className: 'cv-edu', key: i },
                 e('div', { className: 'cv-edu-school' }, ed.school),
                 e('div', { className: 'cv-edu-prog' }, ed.prog),
                 e('div', { className: 'cv-edu-when' }, ed.period))),
             ),
             e('div', null,
-              e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '05'), 'Языки'),
+              e('h2', { className: 'cv-sec-h' }, 'Язы', e('span', { className: 'accent' }, 'ки')),
               d.languages.map((l, i) => e('div', { className: 'cv-lang', key: i },
                 e('span', { className: 'l' }, l.name),
                 e('span', { className: 'v' }, l.level)))),
@@ -301,7 +311,7 @@
           e('h2', { className: 'cv-foot-h' }, 'Давайте поработаем вместе'),
           e('div', { className: 'cv-foot-sub' }, 'Открыт к предложениям — Frontend / React · готов к релокации'),
           e('div', { className: 'cv-foot-links' }, cs.map((c, i) => pill(c, i, e))),
-          e('div', { className: 'cv-foot-copy' }, '© 2026 Хамзат Добриев · собрано вручную на React'),
+          e('div', { className: 'cv-foot-copy' }, '© 2026 Хамзат Добриев'),
         ),
       ),
     );
