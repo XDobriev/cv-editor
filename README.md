@@ -1,20 +1,24 @@
-# Резюме — Хамзат Добриев · Frontend Developer
+# Портфолио — Хамзат Добриев · Frontend Developer
 
-Интерактивное веб-резюме в эстетике «Dev / Techno» (IBM Plex Sans + Mono, тёплая бумага, терракотовый акцент). Чистая статика без сборки: React 18 подключается с CDN, всё содержимое инлайн.
+Веб-портфолио и резюме в эстетике «Dev / Techno» (IBM Plex Sans + Mono, тёплая бумага, терракотовый акцент). Чистая статика без сборки: React 18 подключается с CDN.
 
 ## 🔗 Живая версия
 
-- **Резюме:** https://xdobriev.github.io/cv-editor/
+- **Портфолио:** https://xdobriev.github.io/cv-editor/
+- **Резюме (A4 → PDF):** https://xdobriev.github.io/cv-editor/resume.html
 - **Редактор:** https://xdobriev.github.io/cv-editor/editor.html
 
 ## Состав
 
 | Файл | Назначение |
 |------|------------|
-| `index.html` | Готовая страница резюме (React UMD, без build-шага) |
+| `index.html` | Лендинг-портфолио (hero · проекты · опыт · стек · контакты) |
+| `cv.js` | React-компонент `WebCV` — разметка лендинга |
+| `resume-data.js` | Данные резюме и портфолио (`window.RESUME`) |
+| `resume.html` | Готовое резюме формата A4 с экспортом в текстовый PDF |
 | `editor.html` | Визуальный редактор резюме |
 | `print.html` | Печатная версия |
-| `*.jsx`, `resume-data.js` | Исходники-черновики компонентов |
+| `resume-*.jsx` | Исходники-черновики альтернативных вёрсток резюме |
 
 ## Стек
 

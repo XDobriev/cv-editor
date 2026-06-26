@@ -156,7 +156,7 @@
             e('a', { href: '#stack' }, 'Стек'),
             e('a', { href: '#contact' }, 'Контакты'),
           ),
-          e('a', { className: 'cv-dl', href: 'Резюме Хамзат Добриев (печать).html', target: '_blank' }, '↓ PDF-резюме'),
+          e('a', { className: 'cv-dl', href: 'resume.html' }, '↓ PDF-резюме'),
         ),
       ),
       // hero
