@@ -198,8 +198,8 @@
               e('span', { className: 'cv-label' }, 'React · TypeScript · 4+ года'),
               e('h1', { className: 'cv-h1' }, 'Хамзат Добриев'),
               e('div', { className: 'cv-role' },
-                'Frontend-разработчик с ',
-                e('strong', null, 'живым продуктом в продакшне'),
+                'Строю продукты от первого коммита до ',
+                e('strong', null, 'живых пользователей'),
                 ' — Назрань · удалённо · готов к релокации'),
               e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
             ),
@@ -213,11 +213,11 @@
       e('div', { className: 'cv-impact' },
         e('div', { className: 'cv-wrap' },
           e('p', { className: 'cv-impact-text', dangerouslySetInnerHTML: { __html:
-            'На курорте Армхи автоматизировал ключевые процессы: ' +
-            'сократил ожидание гостя на ресепшене на <strong class="num">10 минут</strong>, ' +
-            'снизил нагрузку колл-центра на <strong class="num">90%</strong>, ' +
-            'сэкономил бизнесу <strong class="num">40 000 ₽/мес</strong> на интеграции. ' +
-            '<strong>4+ года</strong> на стыке бизнеса и разработки.'
+            'Запустил собственный SaaS и автоматизировал процессы на курорте Армхи: ' +
+            '<strong class="num">−10 мин</strong> ожидания на ресепшене, ' +
+            '<strong class="num">−90%</strong> звонков в колл-центр, ' +
+            '<strong class="num">40 000 ₽/мес</strong> экономии для бизнеса. ' +
+            '<strong>4+ года</strong> превращаю задачи бизнеса в работающий код.'
           }}),
         ),
       ),
@@ -308,8 +308,8 @@
       // contact footer
       e('footer', { className: 'cv-sec cv-foot', id: 'contact', style: { borderBottom: 'none' } },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-foot-h' }, 'Давайте поработаем вместе'),
-          e('div', { className: 'cv-foot-sub' }, 'Открыт к предложениям — Frontend / React · готов к релокации'),
+          e('h2', { className: 'cv-foot-h' }, 'Готов к новым проектам'),
+          e('div', { className: 'cv-foot-sub' }, 'Frontend · React — Назрань · удалённо · открыт к релокации'),
           e('div', { className: 'cv-foot-links' }, cs.map((c, i) => pill(c, i, e))),
           e('div', { className: 'cv-foot-copy' }, '© 2026 Хамзат Добриев'),
         ),
