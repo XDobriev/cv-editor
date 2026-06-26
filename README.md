@@ -4,8 +4,8 @@
 
 ## 🔗 Живая версия
 
-- **Резюме:** https://xdobriev.github.io/resume.editor/
-- **Редактор:** https://xdobriev.github.io/resume.editor/editor.html
+- **Резюме:** https://xdobriev.github.io/cv-editor/
+- **Редактор:** https://xdobriev.github.io/cv-editor/editor.html
 
 ## Состав
 
