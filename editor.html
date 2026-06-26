@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Резюме — редактор</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --paper:#FCFAF7; --ink:#211C18; --ink2:#4A4039; --muted:#8C8076;
+  --line:#E7DED5; --accent:#BF5A36; --accent-deep:#934026;
+  --accent-line:rgba(191,90,54,.32); --accent-tint:#F5E7DF;
+
+  --ed-bg:#161412; --ed-surf:#201E1B; --ed-surf2:#2A2724;
+  --ed-border:#302D29; --ed-text:#E8E0D8; --ed-muted:#706860;
+  --ed-accent:#BF5A36; --ed-input:#242220;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'IBM Plex Sans', sans-serif; }
+
+/* ─── APP SHELL ─────────────────────────────────────────── */
+.app { display: flex; height: 100vh; background: #0D0B0A; overflow: hidden; }
+
+/* ─── EDITOR SIDEBAR ────────────────────────────────────── */
+.editor {
+  width: 380px; min-width: 380px;
+  display: flex; flex-direction: column;
+  background: var(--ed-bg);
+  border-right: 1px solid var(--ed-border);
+  overflow: hidden;
+}
+
+.ed-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--ed-border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.ed-logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ed-accent);
+}
+.ed-logo span { color: var(--ed-muted); }
+
+.btn-pdf {
+  background: var(--ed-accent); color: #fff;
+  border: none; border-radius: 5px;
+  padding: 8px 18px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+  display: flex; align-items: center; gap: 7px;
+  letter-spacing: .01em;
+}
+.btn-pdf:hover { background: var(--accent-deep); }
+.btn-pdf svg { flex-shrink: 0; }
+
+.ed-scroll {
+  flex: 1; overflow-y: auto; padding: 12px;
+}
+.ed-scroll::-webkit-scrollbar { width: 5px; }
+.ed-scroll::-webkit-scrollbar-thumb { background: var(--ed-border); border-radius: 3px; }
+
+/* ─── ACCORDION SECTIONS ────────────────────────────────── */
+.acc { margin-bottom: 4px; border: 1px solid var(--ed-border); border-radius: 7px; overflow: hidden; }
+
+.acc-head {
+  padding: 10px 14px; background: var(--ed-surf);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.acc-head:hover { background: var(--ed-surf2); }
+
+.acc-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 600; color: var(--ed-text);
+  display: flex; align-items: center; gap: 8px;
+}
+.acc-label .n { color: var(--ed-accent); font-weight: 400; }
+
+.acc-arrow { color: var(--ed-muted); font-size: 9px; transition: transform .2s; }
+.acc.open .acc-arrow { transform: rotate(180deg); }
+
+.acc-body {
+  display: none; padding: 14px;
+  background: #1A1815;
+  border-top: 1px solid var(--ed-border);
+}
+.acc.open .acc-body { display: block; }
+
+/* ─── FORM CONTROLS ─────────────────────────────────────── */
+.field { margin-bottom: 11px; }
+.field:last-child { margin-bottom: 0; }
+.field.row { display: flex; gap: 10px; }
+.field.row > * { flex: 1; }
+
+label {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ed-muted); margin-bottom: 5px;
+}
+
+input[type=text], textarea {
+  width: 100%; background: var(--ed-input);
+  border: 1px solid var(--ed-border); border-radius: 4px;
+  color: var(--ed-text);
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+  padding: 7px 10px; outline: none; transition: border-color .15s;
+  -webkit-appearance: none;
+}
+input[type=text]:focus, textarea:focus { border-color: var(--ed-accent); }
+textarea { resize: vertical; min-height: 72px; line-height: 1.55; }
+
+.hint { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ed-muted); margin: 4px 0 10px; }
+
+/* ─── ENTRY CARDS ───────────────────────────────────────── */
+.entry {
+  background: var(--ed-input); border: 1px solid var(--ed-border);
+  border-radius: 5px; padding: 12px; margin-bottom: 10px;
+}
+.entry:last-child { margin-bottom: 0; }
+.entry-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; color: var(--ed-accent);
+  letter-spacing: .04em; margin-bottom: 10px;
+}
+
+/* ─── PHOTO UPLOAD ──────────────────────────────────────── */
+.photo-upload {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 11px;
+}
+.photo-thumb {
+  width: 56px; height: 56px; border-radius: 3px;
+  background: var(--ed-surf2); border: 1px solid var(--ed-border);
+  object-fit: cover; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb-placeholder {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; color: var(--ed-muted); text-align: center; line-height: 1.4;
+}
+.btn-photo {
+  background: transparent; border: 1px dashed var(--ed-border); border-radius: 4px;
+  color: var(--ed-muted); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+  padding: 7px 13px; cursor: pointer; transition: border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.btn-photo:hover { border-color: var(--ed-accent); color: var(--ed-accent); }
+input[type=file] { display: none; }
+
+/* ─── PREVIEW PANE ──────────────────────────────────────── */
+.preview {
+  flex: 1; overflow-y: auto;
+  background: #222018;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 48px 40px;
+}
+.preview::-webkit-scrollbar { width: 8px; }
+.preview::-webkit-scrollbar-track { background: #1A1816; }
+.preview::-webkit-scrollbar-thumb { background: #38342F; border-radius: 4px; }
+
+/* ─── RESUME STYLES (exact match to resume-c) ───────────── */
+.rc-page {
+  width: 794px; min-height: 1123px;
+  background: var(--paper); color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding: 44px 56px 48px;
+  display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  border-top: 4px solid var(--accent);
+  box-shadow: 0 12px 60px rgba(0,0,0,.5);
+  flex-shrink: 0;
+}
+.rc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 26px; }
+.rc-headl { min-width: 0; }
+.rc-tagline { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--accent); letter-spacing: .02em; margin-bottom: 9px; }
+.rc-tagline .br { color: var(--muted); }
+.rc-name { font-size: 40px; font-weight: 600; line-height: 1.02; letter-spacing: -.02em; margin: 0; color: var(--ink); }
+.rc-sub { font-size: 13px; color: var(--ink2); margin-top: 7px; font-weight: 500; }
+.rc-photo { width: 100px; height: 100px; flex: 0 0 auto; border: 1px solid var(--line); object-fit: cover; }
+.rc-photo-ph { width: 100px; height: 100px; flex: 0 0 auto; border: 1px solid var(--line); background: var(--accent-tint); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); }
+.rc-meta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-top: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink2); }
+.rc-meta .mk { color: var(--muted); }
+.rc-meta a { color: var(--ink2); text-decoration: none; }
+.rc-divider { height: 1px; background: var(--line); margin: 18px 0; }
+.rc-cols { display: grid; grid-template-columns: 1fr 246px; gap: 38px; flex: 1; }
+.rc-sechead { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); font-weight: 600; margin: 0 0 13px; display: flex; align-items: center; gap: 8px; }
+.rc-sechead .idx { color: var(--accent); }
+.rc-block { margin-bottom: 16px; }
+.rc-block:last-child { margin-bottom: 0; }
+.rc-exp { margin-bottom: 10px; }
+.rc-exp:last-child { margin-bottom: 0; }
+.rc-exp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.rc-org { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.rc-unit { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.3; margin-top: 1px; }
+.rc-period { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.rc-title { font-size: 12px; color: var(--accent-deep); font-weight: 500; margin: 1px 0 7px; }
+.rc-bullets { list-style: none; }
+.rc-bullets li { font-size: 12px; line-height: 1.45; color: var(--ink2); padding-left: 18px; position: relative; margin-bottom: 4px; }
+.rc-bullets li::before { content: '→'; position: absolute; left: 0; top: 0; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.rc-bullets b { color: var(--ink); font-weight: 700; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; }
+.rc-proj { margin-bottom: 11px; }
+.rc-proj-top { display: flex; align-items: baseline; gap: 9px; }
+.rc-proj-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.rc-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .02em; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 2px; padding: 1.5px 6px; }
+.rc-stack { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin: 3px 0 4px; line-height: 1.45; }
+.rc-desc { font-size: 11.5px; line-height: 1.45; color: var(--ink2); margin: 0; }
+.rc-links { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.rc-techgrp { margin-bottom: 13px; }
+.rc-tgh { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .04em; color: var(--accent-deep); margin-bottom: 6px; text-transform: lowercase; }
+.rc-tgh::before { content: '# '; color: var(--accent); }
+.rc-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.rc-chip { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink2); border: 1px solid var(--line); border-radius: 3px; padding: 2px 7px; line-height: 1.3; background: #fff; white-space: nowrap; }
+.rc-edu { margin-bottom: 11px; }
+.rc-edu:last-child { margin-bottom: 0; }
+.rc-edu-h { font-size: 12px; font-weight: 600; color: var(--ink); }
+.rc-edu-p { font-size: 11px; color: var(--ink2); line-height: 1.4; margin: 1px 0; }
+.rc-edu-d { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+.rc-lang { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.rc-lang:last-child { border-bottom: 0; }
+.rc-lang .l { color: var(--ink); font-weight: 500; }
+.rc-lang .v { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+
+/* ─── PRINT ─────────────────────────────────────────────── */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff; height: auto; }
+  .app { display: block; height: auto; }
+  .editor { display: none !important; }
+  .preview { display: block; background: #fff; padding: 0; overflow: visible; }
+  .rc-page { box-shadow: none !important; width: 210mm; min-height: 297mm; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════ EDITOR SIDEBAR ═══════════════ -->
+  <aside class="editor">
+    <div class="ed-header">
+      <div class="ed-logo"><span>// </span>resume.editor</div>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M6.5 1v8M3 6.5l3.5 3.5 3.5-3.5M1 10.5h11" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Скачать PDF
+      </button>
+    </div>
+
+    <div class="ed-scroll">
+
+      <!-- 00 Личное -->
+      <div class="acc open">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">00</span> Личное</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="photo-upload">
+            <div class="photo-thumb" id="photo-thumb">
+              <div class="photo-thumb-placeholder">фото</div>
+            </div>
+            <div>
+              <button class="btn-photo" onclick="document.getElementById('photo-file').click()">Загрузить фото</button>
+              <input type="file" id="photo-file" accept="image/*" onchange="loadPhoto(event)">
+              <div class="hint" style="margin:6px 0 0">png, jpg — рекомендуется</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Имя</label>
+            <input type="text" id="f-name" value="Хамзат Добриев" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Должность</label>
+            <input type="text" id="f-role" value="Frontend Developer" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Тэглайн (строка под &lt;...&gt;)</label>
+            <input type="text" id="f-tag" value="react · typescript · 4+ yrs" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Местоположение</label>
+            <input type="text" id="f-loc" value="Назрань · удалённо" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Подпись к должности</label>
+            <input type="text" id="f-reloc" value="готов к релокации" oninput="render()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 01 Контакты -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">01</span> Контакты</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="field">
+            <label>Email</label>
+            <input type="text" id="f-email" value="XDobriev@yandex.ru" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Телефон</label>
+            <input type="text" id="f-phone" value="+7 (963) 134-26-93" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Telegram</label>
+            <input type="text" id="f-tg" value="@XDobriev" oninput="render()">
+          </div>
+          <div class="field">
+            <label>GitHub</label>
+            <input type="text" id="f-gh" value="github.com/XDobriev" oninput="render()">
+          </div>
+          <div class="field">
+            <label>Сайт</label>
+            <input type="text" id="f-site" value="avtorstudio.com" oninput="render()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 О себе -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">02</span> О себе</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <textarea id="f-about" oninput="render()" style="min-height:90px">Frontend-разработчик с живым продуктом в продакшне (AvtorStudio) и 4+ годами на стыке бизнеса и технологий. Умею разговаривать с нетехническими стейкхолдерами и превращать боли бизнеса в работающий продукт. Прошёл полный цикл от идеи до CI/CD и сбора фидбека. Активно применяю AI-инструменты в ежедневной разработке.</textarea>
+        </div>
+      </div>
+
+      <!-- 03 Стек -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">03</span> Стек</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="hint">Технологии через запятую</div>
+          <div class="entry">
+            <div class="entry-title"># frontend</div>
+            <div class="field"><label>Группа</label><input type="text" id="t0g" value="Frontend" oninput="render()"></div>
+            <div class="field"><label>Технологии</label><input type="text" id="t0i" value="React, TypeScript, JavaScript ES6+, HTML5 / CSS3, TanStack Query, React Hook Form, TipTap" oninput="render()"></div>
+          </div>
+          <div class="entry">
+            <div class="entry-title"># backend</div>
+            <div class="field"><label>Группа</label><input type="text" id="t1g" value="Backend & Data" oninput="render()"></div>
+            <div class="field"><label>Технологии</label><input type="text" id="t1i" value="Supabase, PostgreSQL, SQLite, REST API, FastAPI" oninput="render()"></div>
+          </div>
+          <div class="entry">
+            <div class="entry-title"># инструменты</div>
+            <div class="field"><label>Группа</label><input type="text" id="t2g" value="Инструменты" oninput="render()"></div>
+            <div class="field"><label>Технологии</label><input type="text" id="t2i" value="Git / GitHub Actions, CI/CD, Vercel, Figma, Vitest, Playwright" oninput="render()"></div>
+          </div>
+          <div class="entry">
+            <div class="entry-title"># ai</div>
+            <div class="field"><label>Группа</label><input type="text" id="t3g" value="AI в разработке" oninput="render()"></div>
+            <div class="field"><label>Технологии</label><input type="text" id="t3i" value="Claude Code, Cursor" oninput="render()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 Опыт -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">04</span> Опыт работы</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="hint">Каждое достижение — с новой строки. <b style="color:var(--ed-text)">&lt;b&gt;жирный&lt;/b&gt;</b> поддерживается.</div>
+          <div class="entry">
+            <div class="entry-title">// место 1</div>
+            <div class="field"><label>Организация</label><input type="text" id="e0org" value="ООО «Курорты Ингушетии»" oninput="render()"></div>
+            <div class="field"><label>Подразделение</label><input type="text" id="e0unit" value="курорт Армхи" oninput="render()"></div>
+            <div class="field"><label>Должность</label><input type="text" id="e0title" value="Специалист по автоматизации бизнес-процессов" oninput="render()"></div>
+            <div class="field"><label>Период</label><input type="text" id="e0period" value="окт 2021 — н.в." oninput="render()"></div>
+            <div class="field">
+              <label>Достижения</label>
+              <textarea id="e0bullets" oninput="render()" style="min-height:130px">Интеграция TravelLine ↔ G1-Software (скан паспортов на ресепшене): ожидание гостя сократилось на <b>10 минут</b>
+Интеграция iiko ↔ DocInBox (Честный Знак): экономия <b>40 000 ₽/мес</b>, устранена должность сотрудника склада
+Внедрение Hotbot на сайт курорта: нагрузка колл-центра <b>−90%</b> по теме доп. услуг
+Telegram-бот (TypeScript + Grammy.js + SQLite) для онбординга: инструкции, тесты, трекинг — полный цикл от прототипа до прода (NDA)
+Настройка CRM/ERP: Битрикс24, Kaiten, UIS, YouGile, TravelLine, iiko, Medesk</textarea>
+            </div>
+          </div>
+          <div class="entry">
+            <div class="entry-title">// место 2</div>
+            <div class="field"><label>Организация</label><input type="text" id="e1org" value="ООО «Смарт Таргет Центр»" oninput="render()"></div>
+            <div class="field"><label>Подразделение</label><input type="text" id="e1unit" value="IThub · KiberOne" oninput="render()"></div>
+            <div class="field"><label>Должность</label><input type="text" id="e1title" value="Преподаватель IT-дисциплин" oninput="render()"></div>
+            <div class="field"><label>Период</label><input type="text" id="e1period" value="окт 2023 — н.в." oninput="render()"></div>
+            <div class="field">
+              <label>Достижения</label>
+              <textarea id="e1bullets" oninput="render()">Курсы: HTML & CSS, алгоритмы и структуры данных, архитектура ИС, основы технической документации
+Разработка учебных материалов, менторинг студентов по современному стеку</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 05 Проекты -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">05</span> Проекты</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="entry">
+            <div class="entry-title">// проект 1</div>
+            <div class="field"><label>Название</label><input type="text" id="p0name" value="AvtorStudio" oninput="render()"></div>
+            <div class="field"><label>Статус</label><input type="text" id="p0status" value="в продакшне" oninput="render()"></div>
+            <div class="field"><label>Стек</label><input type="text" id="p0stack" value="React · TypeScript · Supabase · PostgreSQL · TipTap · TanStack Query · GitHub Actions · Vercel" oninput="render()"></div>
+            <div class="field"><label>Описание</label><textarea id="p0desc" oninput="render()">Платформа для писателей: редактор рукописей (TipTap), управление персонажами и заметками, облачное хранение (Supabase + RLS), адаптивный UI. CI/CD через GitHub Actions, автодеплой на Vercel, тестирование Vitest и Playwright, защита ввода DOMPurify. Публичная версия запущена, собрана обратная связь первых пользователей.</textarea></div>
+            <div class="field"><label>Ссылки</label><input type="text" id="p0links" value="avtorstudio.com · github.com/XDobriev/writers_studio" oninput="render()"></div>
+          </div>
+          <div class="entry">
+            <div class="entry-title">// проект 2</div>
+            <div class="field"><label>Название</label><input type="text" id="p1name" value="FinRest" oninput="render()"></div>
+            <div class="field"><label>Статус</label><input type="text" id="p1status" value="в разработке" oninput="render()"></div>
+            <div class="field"><label>Стек</label><input type="text" id="p1stack" value="React · Python / FastAPI · SQLite" oninput="render()"></div>
+            <div class="field"><label>Описание</label><textarea id="p1desc" oninput="render()">Управленческий учёт для ресторанного бизнеса: загрузка банковских выписок, проводки по статьям ДДС, автоматические отчёты (ДДС, ОПиУ, баланс), дашборд ключевых метрик.</textarea></div>
+            <div class="field"><label>Ссылки</label><input type="text" id="p1links" value="" oninput="render()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 Образование -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">06</span> Образование</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="entry">
+            <div class="entry-title">// учёба 1</div>
+            <div class="field"><label>Заведение</label><input type="text" id="edu0school" value="МФПУ «Синергия»" oninput="render()"></div>
+            <div class="field"><label>Программа</label><input type="text" id="edu0prog" value="Информационные системы и программирование" oninput="render()"></div>
+            <div class="field"><label>Период</label><input type="text" id="edu0period" value="2021 — 2025" oninput="render()"></div>
+          </div>
+          <div class="entry">
+            <div class="entry-title">// учёба 2</div>
+            <div class="field"><label>Заведение</label><input type="text" id="edu1school" value="Purple School" oninput="render()"></div>
+            <div class="field"><label>Программа</label><input type="text" id="edu1prog" value="Frontend Developer — JS, TypeScript, React, Redux Toolkit, Next.js, Git Flow" oninput="render()"></div>
+            <div class="field"><label>Период</label><input type="text" id="edu1period" value="2025 — 2026 (в процессе)" oninput="render()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 07 Языки -->
+      <div class="acc">
+        <div class="acc-head" onclick="toggle(this.parentElement)">
+          <span class="acc-label"><span class="n">07</span> Языки</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+        <div class="acc-body">
+          <div class="entry">
+            <div class="field row">
+              <div><label>Язык 1</label><input type="text" id="l0name" value="Русский" oninput="render()"></div>
+              <div style="max-width:90px"><label>Уровень</label><input type="text" id="l0level" value="Родной" oninput="render()"></div>
+            </div>
+          </div>
+          <div class="entry" style="margin-bottom:0">
+            <div class="field row" style="margin-bottom:0">
+              <div><label>Язык 2</label><input type="text" id="l1name" value="Английский" oninput="render()"></div>
+              <div style="max-width:90px"><label>Уровень</label><input type="text" id="l1level" value="B1" oninput="render()"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.ed-scroll -->
+  </aside>
+
+  <!-- ═══════════════ PREVIEW ═══════════════ -->
+  <div class="preview">
+    <div class="rc-page" id="resume"></div>
+  </div>
+
+</div><!-- /.app -->
+
+<script>
+// ── helpers ──────────────────────────────────────────────
+function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── accordion toggle ─────────────────────────────────────
+function toggle(section) { section.classList.toggle('open'); }
+
+// ── photo upload ─────────────────────────────────────────
+let photoSrc = null;
+function loadPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoSrc = ev.target.result;
+    const thumb = document.getElementById('photo-thumb');
+    thumb.innerHTML = `<img src="${photoSrc}" alt="фото">`;
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── main render ──────────────────────────────────────────
+function render() {
+  const name    = val('f-name');
+  const role    = val('f-role');
+  const tag     = val('f-tag');
+  const loc     = val('f-loc');
+  const reloc   = val('f-reloc');
+  const email   = val('f-email');
+  const phone   = val('f-phone');
+  const tg      = val('f-tg');
+  const gh      = val('f-gh');
+  const site    = val('f-site');
+  const about   = val('f-about');
+
+  // ── meta row ──
+  const meta = [
+    { k:'loc',   v: loc },
+    { k:'email', v: email,  href:`mailto:${email}` },
+    { k:'tel',   v: phone,  href:`tel:${phone.replace(/[^\d+]/g,'')}` },
+    { k:'tg',    v: tg,     href:`https://t.me/${tg.replace('@','')}` },
+    { k:'git',   v: gh,     href:`https://${gh}` },
+    { k:'web',   v: site,   href:`https://${site}` },
+  ].filter(m => m.v.trim());
+
+  const metaHTML = meta.map(m => {
+    const val = m.href
+      ? `<a href="${esc(m.href)}">${esc(m.v)}</a>`
+      : esc(m.v);
+    return `<span><span class="mk">${esc(m.k)}: </span>${val}</span>`;
+  }).join('');
+
+  // ── photo ──
+  const photoHTML = photoSrc
+    ? `<img class="rc-photo" src="${photoSrc}" alt="фото">`
+    : `<div class="rc-photo-ph">фото</div>`;
+
+  // ── tech ──
+  const techHTML = [0,1,2,3].map(i => {
+    const g = val(`t${i}g`).trim();
+    const items = val(`t${i}i`).split(',').map(s=>s.trim()).filter(Boolean);
+    if (!g || !items.length) return '';
+    return `<div class="rc-techgrp">
+      <div class="rc-tgh">${esc(g.toLowerCase())}</div>
+      <div class="rc-chips">${items.map(it=>`<span class="rc-chip">${esc(it)}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  // ── experience ──
+  const expHTML = [0,1].map(i => {
+    const org = val(`e${i}org`).trim();
+    if (!org) return '';
+    const unit   = val(`e${i}unit`).trim();
+    const title  = val(`e${i}title`).trim();
+    const period = val(`e${i}period`).trim();
+    const bullets = val(`e${i}bullets`).split('\n').map(s=>s.trim()).filter(Boolean);
+    return `<div class="rc-exp">
+      <div class="rc-exp-top">
+        <div>
+          <div class="rc-org">${esc(org)}</div>
+          ${unit ? `<div class="rc-unit">${esc(unit)}</div>` : ''}
+        </div>
+        <div class="rc-period">${esc(period)}</div>
+      </div>
+      <div class="rc-title">${esc(title)}</div>
+      <ul class="rc-bullets">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+
+  // ── projects ──
+  const projHTML = [0,1].map(i => {
+    const n = val(`p${i}name`).trim();
+    if (!n) return '';
+    const status = val(`p${i}status`).trim();
+    const stack  = val(`p${i}stack`).trim();
+    const desc   = val(`p${i}desc`).trim();
+    const links  = val(`p${i}links`).trim();
+    return `<div class="rc-proj">
+      <div class="rc-proj-top">
+        <span class="rc-proj-name">${esc(n)}</span>
+        ${status ? `<span class="rc-tag">${esc(status)}</span>` : ''}
+      </div>
+      ${stack ? `<div class="rc-stack">${esc(stack)}</div>` : ''}
+      <p class="rc-desc">${esc(desc)}</p>
+      ${links ? `<div class="rc-links">${esc(links)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // ── education ──
+  const eduHTML = [0,1].map(i => {
+    const school = val(`edu${i}school`).trim();
+    if (!school) return '';
+    return `<div class="rc-edu">
+      <div class="rc-edu-h">${esc(school)}</div>
+      <div class="rc-edu-p">${esc(val(`edu${i}prog`))}</div>
+      <div class="rc-edu-d">${esc(val(`edu${i}period`))}</div>
+    </div>`;
+  }).join('');
+
+  // ── languages ──
+  const langHTML = [0,1].map(i => {
+    const n = val(`l${i}name`).trim();
+    if (!n) return '';
+    return `<div class="rc-lang">
+      <span class="l">${esc(n)}</span>
+      <span class="v">${esc(val(`l${i}level`))}</span>
+    </div>`;
+  }).join('');
+
+  // ── assemble ──
+  document.getElementById('resume').innerHTML = `
+    <header class="rc-head">
+      <div class="rc-headl">
+        <div class="rc-tagline"><span class="br">&lt;</span>${esc(tag)}<span class="br"> /&gt;</span></div>
+        <h1 class="rc-name">${esc(name)}</h1>
+        <div class="rc-sub">${esc(role)}${reloc ? ` — ${esc(reloc)}` : ''}</div>
+      </div>
+      ${photoHTML}
+    </header>
+    <div class="rc-meta">${metaHTML}</div>
+    <div class="rc-divider"></div>
+    <section style="margin-bottom:14px">
+      <h2 class="rc-sechead"><span class="idx">00</span> О себе</h2>
+      <p class="rc-desc" style="max-width:74ch">${esc(about)}</p>
+    </section>
+    <div class="rc-cols">
+      <div>
+        <div class="rc-block">
+          <h2 class="rc-sechead"><span class="idx">01</span> Опыт работы</h2>
+          ${expHTML}
+        </div>
+        <div class="rc-block">
+          <h2 class="rc-sechead"><span class="idx">02</span> Проекты</h2>
+          ${projHTML}
+        </div>
+      </div>
+      <div>
+        <div class="rc-block">
+          <h2 class="rc-sechead"><span class="idx">03</span> Стек</h2>
+          ${techHTML}
+        </div>
+        <div class="rc-block">
+          <h2 class="rc-sechead"><span class="idx">04</span> Образование</h2>
+          ${eduHTML}
+        </div>
+        <div class="rc-block">
+          <h2 class="rc-sechead"><span class="idx">05</span> Языки</h2>
+          ${langHTML}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>
