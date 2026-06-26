@@ -70,7 +70,7 @@
   };
 
   const PORTFOLIO = {
-    photo: null,            // фото для hero лендинга, напр. 'images/photo.jpg' (null → плейсхолдер)
+    photo: 'images/photo.jpg',   // фото для hero лендинга (null → плейсхолдер)
     metrics: [
       { value: '−10 мин', label: 'ожидание гостя на ресепшене' },
       { value: '40 000 ₽', label: 'экономии в месяц на автоматизации' },
@@ -99,7 +99,7 @@
         id: 'finrest', name: 'FinRest', status: 'в разработке',
         tagline: 'Управленческий учёт для ресторанов',
         slot: 'shot-finrest',
-        img: null,
+        img: 'images/finrest.png',
         stack: ['React', 'Python', 'FastAPI', 'SQLite'],
         desc: 'Сервис управленческого учёта для ресторанного бизнеса: загрузка банковских выписок, проводки по статьям движения денежных средств, автоматические отчёты и дашборд ключевых метрик.',
         points: [
