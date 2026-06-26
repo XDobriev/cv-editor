@@ -70,6 +70,7 @@
   };
 
   const PORTFOLIO = {
+    photo: null,            // фото для hero лендинга, напр. 'images/photo.jpg' (null → плейсхолдер)
     metrics: [
       { value: '−10 мин', label: 'ожидание гостя на ресепшене' },
       { value: '40 000 ₽', label: 'экономии в месяц на автоматизации' },
@@ -81,6 +82,7 @@
         id: 'avtorstudio', name: 'AvtorStudio', status: 'в продакшне',
         tagline: 'Платформа для писателей',
         slot: 'shot-avtorstudio',
+        img: 'images/avtorstudio.png',
         stack: ['React', 'TypeScript', 'Supabase', 'PostgreSQL', 'TipTap', 'TanStack Query', 'GitHub Actions', 'Vercel', 'Vitest', 'Playwright'],
         desc: 'SaaS для авторов: редактор рукописей на TipTap, управление персонажами и заметками, облачное хранение на Supabase с Row-Level Security, адаптивный интерфейс.',
         points: [
@@ -97,6 +99,7 @@
         id: 'finrest', name: 'FinRest', status: 'в разработке',
         tagline: 'Управленческий учёт для ресторанов',
         slot: 'shot-finrest',
+        img: null,
         stack: ['React', 'Python', 'FastAPI', 'SQLite'],
         desc: 'Сервис управленческого учёта для ресторанного бизнеса: загрузка банковских выписок, проводки по статьям движения денежных средств, автоматические отчёты и дашборд ключевых метрик.',
         points: [

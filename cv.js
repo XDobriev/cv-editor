@@ -41,6 +41,7 @@
     .cv-pill:hover{border-color:var(--accent-line);color:var(--accent-deep);}
     .cv-pill .k{color:var(--muted);}
     .cv-photo{width:200px;height:200px;border:1px solid var(--line);box-shadow:0 10px 40px rgba(60,30,15,.12);}
+    img.cv-photo{object-fit:cover;object-position:center;border-radius:14px;}
 
     /* metrics strip */
     .cv-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
@@ -64,8 +65,9 @@
     .cv-proj{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-bottom:64px;}
     .cv-proj:last-child{margin-bottom:0;}
     .cv-proj.rev .cv-proj-media{order:2;}
-    .cv-proj-media image-slot{width:100%;aspect-ratio:4/3;border:1px solid var(--line);
+    .cv-proj-media image-slot,.cv-proj-media img{width:100%;aspect-ratio:4/3;border:1px solid var(--line);
       border-radius:10px;box-shadow:0 8px 30px rgba(60,30,15,.10);}
+    .cv-proj-media img{display:block;object-fit:cover;object-position:top;}
     .cv-proj-head{display:flex;align-items:center;gap:12px;margin-bottom:5px;}
     .cv-proj-name{font-size:27px;font-weight:600;letter-spacing:-.02em;}
     .cv-proj-status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);
@@ -199,7 +201,9 @@
               e('div', { className: 'cv-role', dangerouslySetInnerHTML: { __html: 'Frontend-разработчик с <b>живым продуктом в продакшне</b> — Назрань · удалённо · готов к релокации' } }),
               e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
             ),
-            e('image-slot', { id: 'cv-photo', class: 'cv-photo', shape: 'rounded', radius: '14', placeholder: 'фото' }),
+            PORTFOLIO.photo
+              ? e('img', { className: 'cv-photo', src: PORTFOLIO.photo, alt: 'Хамзат Добриев' })
+              : e('image-slot', { id: 'cv-photo', class: 'cv-photo', placeholder: 'фото' }),
           ),
         ),
       ),
@@ -222,7 +226,9 @@
           e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '01'), 'Проекты'),
           PORTFOLIO.projects.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
             e('div', { className: 'cv-proj-media' },
-              e('image-slot', { id: p.slot, shape: 'rounded', radius: '10', placeholder: 'скриншот ' + p.name })),
+              p.img
+                ? e('img', { src: p.img, alt: 'Скриншот ' + p.name, loading: 'lazy' })
+                : e('image-slot', { id: p.slot, placeholder: 'скриншот ' + p.name })),
             e('div', null,
               e('div', { className: 'cv-proj-head' },
                 e('div', { className: 'cv-proj-name' }, p.name),
