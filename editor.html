@@ -725,6 +725,38 @@ function exportJSON(){
   a.download = `resume-${(state.profile.name||'data').trim().replace(/\s+/g,'-')}.json`;
   a.click(); URL.revokeObjectURL(a.href);
 }
+// Генерирует полный resume-data.js (резюме из редактора + неизменный PORTFOLIO),
+// чтобы заменить им файл в репозитории и закоммитить — тогда резюме одинаково во всех браузерах.
+function publishToFile(){
+  const indent = s => s.replace(/\n/g, '\n  ');
+  const resumeJson = indent(JSON.stringify(state, null, 2));
+  const portfolioJson = indent(JSON.stringify(window.PORTFOLIO || {}, null, 2));
+  const file =
+`/* ════════════════════════════════════════════════════════════
+   ЕДИНЫЙ ИСТОЧНИК ДАННЫХ
+   ─ RESUME_DATA — содержимое резюме в формате редактора (editor.html).
+                   Его же читают онлайн-резюме (resume.html) и портфолио.
+   ─ PORTFOLIO    — дополнительные данные только для лендинга-портфолио
+                   (метрики и расширенные карточки проектов).
+   ════════════════════════════════════════════════════════════ */
+(function (root) {
+
+  const RESUME_DATA = ${resumeJson};
+
+  const PORTFOLIO = ${portfolioJson};
+
+  root.RESUME_DATA = RESUME_DATA;
+  root.PORTFOLIO = PORTFOLIO;
+  if (typeof module !== 'undefined' && module.exports) module.exports = { RESUME_DATA, PORTFOLIO };
+
+})(typeof window !== 'undefined' ? window : globalThis);
+`;
+  const blob = new Blob([file], { type: 'application/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resume-data.js';
+  a.click(); URL.revokeObjectURL(a.href);
+}
 function importJSON(file){
   const reader = new FileReader();
   reader.onload = e => {
@@ -828,6 +860,7 @@ document.getElementById('compactToggle').addEventListener('change', e=>{
 
 // экспорт/импорт/сброс
 document.getElementById('btnExport').addEventListener('click', exportJSON);
+document.getElementById('btnPublish').addEventListener('click', publishToFile);
 document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e=>{ if (e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
 document.getElementById('btnReset').addEventListener('click', resetAll);
