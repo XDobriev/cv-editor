@@ -403,6 +403,7 @@ input[type=file] { display: none; }
         <button class="btn-mini" id="btnExport" title="Сохранить данные в файл .json">↓ Экспорт</button>
         <button class="btn-mini" id="btnImport" title="Загрузить данные из файла .json">↑ Импорт</button>
         <input type="file" id="importFile" accept="application/json,.json">
+        <button class="btn-mini" id="btnPublish" title="Сгенерировать resume-data.js для коммита в репозиторий — единое резюме для всех браузеров">⤴ Опубликовать в файл</button>
         <button class="btn-mini danger" id="btnReset" title="Сбросить к исходному резюме">⟲ Сброс</button>
         <span class="page-badge ok" id="pageBadge"><span class="dot"></span>1 страница</span>
       </div>
@@ -418,71 +419,14 @@ input[type=file] { display: none; }
 
 </div><!-- /.app -->
 
+<script src="resume-data.js"></script>
+<script src="resume-render.js"></script>
+
 <script>
 /* ════════════════════════════════════════════════════════════
    DEFAULT DATA  — исходное резюме
    ════════════════════════════════════════════════════════════ */
-const DEFAULTS = {
-  profile: {
-    name: 'Хамзат Добриев',
-    role: 'Frontend Developer',
-    tagline: 'react · typescript · 4+ yrs',
-    reloc: 'готов к релокации',
-    photo: null,
-    showPhoto: true,
-  },
-  contacts: [
-    { key: 'loc',   value: 'Назрань · удалённо' },
-    { key: 'email', value: 'XDobriev@yandex.ru' },
-    { key: 'tel',   value: '+7 (963) 134-26-93' },
-    { key: 'tg',    value: '@XDobriev' },
-    { key: 'git',   value: 'github.com/XDobriev' },
-    { key: 'web',   value: 'avtorstudio.com' },
-  ],
-  about: 'Frontend-разработчик с живым продуктом в продакшне (AvtorStudio) и 4+ годами на стыке бизнеса и технологий. Умею разговаривать с нетехническими стейкхолдерами и превращать боли бизнеса в работающий продукт. Прошёл полный цикл от идеи до CI/CD и сбора фидбека. Активно применяю AI-инструменты в ежедневной разработке.',
-  tech: [
-    { group: 'Frontend',       items: 'React, TypeScript, JavaScript ES6+, HTML5 / CSS3, TanStack Query, React Hook Form, TipTap' },
-    { group: 'Backend & Data', items: 'Supabase, PostgreSQL, SQLite, REST API, FastAPI' },
-    { group: 'Инструменты',    items: 'Git / GitHub Actions, CI/CD, Vercel, Figma, Vitest, Playwright' },
-    { group: 'AI в разработке', items: 'Claude Code, Cursor' },
-  ],
-  experience: [
-    {
-      org: 'ООО «Курорты Ингушетии»', unit: 'курорт Армхи',
-      title: 'Специалист по автоматизации бизнес-процессов', period: 'окт 2021 — н.в.',
-      bullets: 'Интеграция TravelLine ↔ G1-Software (скан паспортов на ресепшене): ожидание гостя сократилось на **10 минут**\nИнтеграция iiko ↔ DocInBox (Честный Знак): экономия **40 000 ₽/мес**, устранена должность сотрудника склада\nВнедрение Hotbot на сайт курорта: нагрузка колл-центра **−90%** по теме доп. услуг\nTelegram-бот (TypeScript + Grammy.js + SQLite) для онбординга: инструкции, тесты, трекинг — полный цикл от прототипа до прода (NDA)\nНастройка CRM/ERP: Битрикс24, Kaiten, UIS, YouGile, TravelLine, iiko, Medesk',
-    },
-    {
-      org: 'ООО «Смарт Таргет Центр»', unit: 'IThub · KiberOne',
-      title: 'Преподаватель IT-дисциплин', period: 'окт 2023 — н.в.',
-      bullets: 'Курсы: HTML & CSS, алгоритмы и структуры данных, архитектура ИС, основы технической документации\nРазработка учебных материалов, менторинг студентов по современному стеку',
-    },
-  ],
-  projects: [
-    {
-      name: 'AvtorStudio', status: 'в продакшне',
-      stack: 'React · TypeScript · Supabase · PostgreSQL · TipTap · TanStack Query · GitHub Actions · Vercel',
-      desc: 'Платформа для писателей: редактор рукописей (TipTap), управление персонажами и заметками, облачное хранение (Supabase + RLS), адаптивный UI. CI/CD через GitHub Actions, автодеплой на Vercel, тестирование Vitest и Playwright, защита ввода DOMPurify. Публичная версия запущена, собрана обратная связь первых пользователей.',
-      links: 'avtorstudio.com · github.com/XDobriev/writers_studio',
-    },
-    {
-      name: 'FinRest', status: 'в разработке',
-      stack: 'React · Python / FastAPI · SQLite',
-      desc: 'Управленческий учёт для ресторанного бизнеса: загрузка банковских выписок, проводки по статьям ДДС, автоматические отчёты (ДДС, ОПиУ, баланс), дашборд ключевых метрик.',
-      links: '',
-    },
-  ],
-  education: [
-    { school: 'МФПУ «Синергия»', prog: 'Информационные системы и программирование', period: '2021 — 2025' },
-    { school: 'Purple School', prog: 'Frontend Developer — JS, TypeScript, React, Redux Toolkit, Next.js, Git Flow', period: '2025 — 2026 (в процессе)' },
-  ],
-  languages: [
-    { name: 'Русский', level: 'Родной' },
-    { name: 'Английский', level: 'B1' },
-  ],
-  custom: [],
-  settings: { accent: '#BF5A36', compact: false },
-};
+const DEFAULTS = window.RESUME_DATA;
 
 const STORE_KEY = 'resume-editor-state-v2';
 const BLANK = {
@@ -530,71 +474,8 @@ function setByPath(obj, path, value){
   o[p[p.length-1]] = value;
 }
 
-/* ── inline-форматирование: **жирный**, ==выделение==, *курсив*,
-      [текст](url), голые ссылки/почта, переносы строк, legacy <b> ── */
-function inlineRich(raw){
-  if (raw == null) return '';
-  let s = esc(String(raw));
-  const toks = [];
-  const stash = html => { toks.push(html); return ''+(toks.length-1)+''; };
-
-  // markdown-ссылки [текст](url)
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g,
-    (m,t,u)=> stash(`<a href="${u}" target="_blank" rel="noopener">${t}</a>`));
-  // голые http(s)-ссылки
-  s = s.replace(/(https?:\/\/[^\s<]+)/g, (m,u)=>{
-    const clean = u.replace(/[.,;:!?)]+$/,''); const tail = u.slice(clean.length);
-    return stash(`<a href="${clean}" target="_blank" rel="noopener">${clean.replace(/^https?:\/\//,'')}</a>`) + tail;
-  });
-  // www.…
-  s = s.replace(/(^|[\s(])(www\.[^\s<]+)/g, (m,pre,u)=>{
-    const clean = u.replace(/[.,;:!?)]+$/,''); const tail = u.slice(clean.length);
-    return pre + stash(`<a href="https://${clean}" target="_blank" rel="noopener">${clean}</a>`) + tail;
-  });
-  // e-mail
-  s = s.replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g,
-    (m,e)=> stash(`<a href="mailto:${e}">${e}</a>`));
-
-  // legacy HTML-теги из старых данных
-  s = s.replace(/&lt;b&gt;/g,'<b>').replace(/&lt;\/b&gt;/g,'</b>').replace(/&lt;br\s*\/?&gt;/g,'<br>');
-  // markdown-разметка
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  s = s.replace(/==([^=]+)==/g, '<mark>$1</mark>');
-  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<i>$2</i>');
-  // переносы строк
-  s = s.replace(/\n/g, '<br>');
-  // вернуть защищённые токены
-  s = s.replace(/(\d+)/g, (m,i)=> toks[+i]);
-  return s;
-}
-
-/* ── список ссылок «avtorstudio.com · github.com/…» ── */
-function linkifyList(raw){
-  return String(raw||'').split(/\s*[·|,]\s*/).filter(Boolean).map(tok=>{
-    const t = tok.trim();
-    let href = null;
-    if (/^https?:\/\//.test(t)) href = t;
-    else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) href = 'mailto:'+t;
-    else if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(t)) href = 'https://'+t;
-    return href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(t)}</a>` : esc(t);
-  }).join(' · ');
-}
-
-/* ── href для контакта по его ключу ── */
-function buildHref(key, value){
-  const k = (key||'').toLowerCase().trim(); const v = (value||'').trim();
-  if (!v) return null;
-  if (/(email|mail|почт)/.test(k))        return 'mailto:'+v;
-  if (/(tel|phone|тел)/.test(k))          return 'tel:'+v.replace(/[^\d+]/g,'');
-  if (/(tg|telegram|телег)/.test(k))      return 'https://t.me/'+v.replace(/^@/,'');
-  if (/(loc|город|адрес|location|где)/.test(k)) return null;
-  if (/^https?:\/\//.test(v))             return v;
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'mailto:'+v;
-  if (/^@?[\w.]+$/.test(v) && /(insta|behance|dribbble|linkedin|vk|habr)/.test(k))
-    return 'https://'+k.replace(/[^a-z]/g,'')+'.com/'+v.replace(/^@/,'');
-  if (/\./.test(v))                       return 'https://'+v;
-  return null;
-}
+/* esc() и setByPath() — выше. inlineRich / linkifyList / buildHref
+   вынесены в общий модуль resume-render.js (общие для резюме и редактора). */
 
 /* ════════════════════════════════════════════════════════════
    FORM RENDERING
@@ -763,123 +644,9 @@ function renderForm(){
    PREVIEW RENDERING
    ════════════════════════════════════════════════════════════ */
 function renderPreview(){
-  const s = state;
-  let c = 0; const num = () => String(c++).padStart(2,'0');
-
-  // фильтры непустых записей
-  const hasAbout = s.about.trim();
-  const expL  = s.experience.filter(e => (e.org||e.title||e.bullets).trim());
-  const projL = s.projects.filter(p => p.name.trim());
-  const custL = s.custom.filter(x => (x.title||x.body).trim());
-  const techL = s.tech.filter(t => t.group.trim() && t.items.trim());
-  const eduL  = s.education.filter(e => e.school.trim());
-  const langL = s.languages.filter(l => l.name.trim());
-
-  const nAbout = hasAbout ? num() : '';
-  const nExp   = expL.length ? num() : '';
-  const nProj  = projL.length ? num() : '';
-  const custN  = custL.map(() => num());
-  const nTech  = techL.length ? num() : '';
-  const nEdu   = eduL.length ? num() : '';
-  const nLang  = langL.length ? num() : '';
-
-  // meta
-  const metaHTML = s.contacts.filter(c=>c.value.trim()).map(c=>{
-    const href = buildHref(c.key, c.value);
-    const inner = href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(c.value)}</a>` : esc(c.value);
-    const key = c.key.trim() ? `<span class="mk">${esc(c.key)}: </span>` : '';
-    return `<span>${key}${inner}</span>`;
-  }).join('');
-
-  // photo
-  const photoHTML = !s.profile.showPhoto ? ''
-    : s.profile.photo ? `<img class="rc-photo" src="${s.profile.photo}" alt="фото">`
-    : `<div class="rc-photo-ph">фото</div>`;
-
-  // tech
-  const techHTML = techL.map(t=>{
-    const items = t.items.split(',').map(x=>x.trim()).filter(Boolean);
-    return `<div class="rc-techgrp">
-      <div class="rc-tgh">${esc(t.group.toLowerCase())}</div>
-      <div class="rc-chips">${items.map(it=>`<span class="rc-chip">${esc(it)}</span>`).join('')}</div>
-    </div>`;
-  }).join('');
-
-  // experience
-  const expHTML = expL.map(e=>{
-    const bullets = e.bullets.split('\n').map(x=>x.trim()).filter(Boolean);
-    return `<div class="rc-exp">
-      <div class="rc-exp-top">
-        <div>
-          <div class="rc-org">${esc(e.org)}</div>
-          ${e.unit.trim()?`<div class="rc-unit">${esc(e.unit)}</div>`:''}
-        </div>
-        ${e.period.trim()?`<div class="rc-period">${esc(e.period)}</div>`:''}
-      </div>
-      ${e.title.trim()?`<div class="rc-title">${esc(e.title)}</div>`:''}
-      ${bullets.length?`<ul class="rc-bullets">${bullets.map(b=>`<li>${inlineRich(b)}</li>`).join('')}</ul>`:''}
-    </div>`;
-  }).join('');
-
-  // projects
-  const projHTML = projL.map(p=>`
-    <div class="rc-proj">
-      <div class="rc-proj-top">
-        <span class="rc-proj-name">${esc(p.name)}</span>
-        ${p.status.trim()?`<span class="rc-tag">${esc(p.status)}</span>`:''}
-      </div>
-      ${p.stack.trim()?`<div class="rc-stack">${esc(p.stack)}</div>`:''}
-      ${p.desc.trim()?`<p class="rc-desc">${inlineRich(p.desc)}</p>`:''}
-      ${p.links.trim()?`<div class="rc-links">${linkifyList(p.links)}</div>`:''}
-    </div>`).join('');
-
-  // custom (в левую колонку)
-  const custHTML = custL.map((x,i)=>`
-    <div class="rc-block">
-      <h2 class="rc-sechead"><span class="idx">${custN[i]}</span> ${esc(x.title||'')}</h2>
-      <p class="rc-desc">${inlineRich(x.body)}</p>
-    </div>`).join('');
-
-  // education
-  const eduHTML = eduL.map(e=>`
-    <div class="rc-edu">
-      <div class="rc-edu-h">${esc(e.school)}</div>
-      ${e.prog.trim()?`<div class="rc-edu-p">${inlineRich(e.prog)}</div>`:''}
-      ${e.period.trim()?`<div class="rc-edu-d">${esc(e.period)}</div>`:''}
-    </div>`).join('');
-
-  // languages
-  const langHTML = langL.map(l=>`
-    <div class="rc-lang"><span class="l">${esc(l.name)}</span><span class="v">${esc(l.level)}</span></div>`).join('');
-
-  // блоки колонок (заголовок показываем только если есть контент)
-  const block = (n, title, html) => html ? `<div class="rc-block"><h2 class="rc-sechead"><span class="idx">${n}</span> ${title}</h2>${html}</div>` : '';
-
-  const leftCol  = block(nExp,'Опыт работы',expHTML) + block(nProj,'Проекты',projHTML) + custHTML;
-  const rightCol = block(nTech,'Стек',techHTML) + block(nEdu,'Образование',eduHTML) + block(nLang,'Языки',langHTML);
-
   const page = document.getElementById('resume');
-  page.classList.toggle('compact', !!s.settings.compact);
-  page.innerHTML = `
-    <header class="rc-head">
-      <div class="rc-headl">
-        ${s.profile.tagline.trim()?`<div class="rc-tagline"><span class="br">&lt;</span> ${esc(s.profile.tagline)} <span class="br">/&gt;</span></div>`:''}
-        <h1 class="rc-name">${esc(s.profile.name)}</h1>
-        <div class="rc-sub">${esc(s.profile.role)}${s.profile.reloc.trim()?` — ${esc(s.profile.reloc)}`:''}</div>
-      </div>
-      ${photoHTML}
-    </header>
-    <div class="rc-meta">${metaHTML}</div>
-    <div class="rc-divider"></div>
-    ${hasAbout?`<section style="margin-bottom:14px">
-      <h2 class="rc-sechead"><span class="idx">${nAbout}</span> О себе</h2>
-      <p class="rc-desc" style="max-width:74ch">${inlineRich(s.about)}</p>
-    </section>`:''}
-    <div class="rc-cols">
-      <div class="${leftCol.trim()?'':'rc-col-empty'}">${leftCol}</div>
-      <div class="${rightCol.trim()?'':'rc-col-empty'}">${rightCol}</div>
-    </div>
-  `;
+  page.classList.toggle('compact', !!state.settings.compact);
+  page.innerHTML = renderResumeHTML(state);   // общий рендерер (resume-render.js)
   requestAnimationFrame(updatePageBadge);
 }
 

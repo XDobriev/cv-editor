@@ -1,6 +1,6 @@
-/* global React */
-// Web CV — scrolling portfolio page in the "C / Dev" aesthetic.
-// IBM Plex Sans + Mono, warm paper, terracotta accent. Sticky side rail nav.
+/* global React, RESUME_DATA, PORTFOLIO, buildHref, inlineRich */
+// Лендинг-портфолио в эстетике «C / Dev». Читает единый источник данных
+// (resume-data.js) и общие хелперы (resume-render.js) — никаких своих копий.
 (function () {
   if (!document.getElementById('cv-styles')) {
     const s = document.createElement('style');
@@ -140,11 +140,40 @@
     document.head.appendChild(s);
   }
 
-  const ICON = { email: '✉', phone: '☎', tg: '◇', gh: '⌘', site: '↗' };
+  // иконка контакта по его ключу из формата редактора
+  function iconFor(key) {
+    const k = (key || '').toLowerCase();
+    if (/mail|email|почт/.test(k)) return '✉';
+    if (/tel|phone|тел/.test(k))   return '☎';
+    if (/tg|telegram|телег/.test(k)) return '◇';
+    if (/git/.test(k))             return '⌘';
+    if (/web|site|сайт/.test(k))   return '↗';
+    if (/loc|город|где|адрес/.test(k)) return '◉';
+    return '·';
+  }
+
+  // контакты из формата редактора {key,value} → {icon,label,href}
+  function contacts() {
+    return RESUME_DATA.contacts
+      .filter(c => (c.value || '').trim())
+      .map(c => ({ icon: iconFor(c.key), label: c.value, href: buildHref(c.key, c.value) }));
+  }
+
+  function pill(c, i, e) {
+    const inner = [e('span', { className: 'k' }, c.icon), c.label];
+    return c.href
+      ? e('a', { className: 'cv-pill', key: i, href: c.href, target: '_blank' }, ...inner)
+      : e('span', { className: 'cv-pill', key: i }, ...inner);
+  }
 
   function WebCV() {
-    const d = window.RESUME;
+    const d = RESUME_DATA;
     const e = React.createElement;
+    const cs = contacts();
+    const aboutHTML = inlineRich(d.about)
+      .replace('AvtorStudio', '<b>AvtorStudio</b>')
+      .replace('полный цикл', '<b>полный цикл</b>');
+
     return e('div', { className: 'cv' },
       // top bar
       e('div', { className: 'cv-top' },
@@ -165,13 +194,10 @@
           e('div', { className: 'cv-hero-grid' },
             e('div', null,
               e('div', { className: 'cv-tagline' },
-                e('span', { className: 'br' }, '<'), 'react · typescript · 4+ yrs', e('span', { className: 'br' }, ' />')),
+                e('span', { className: 'br' }, '<'), d.profile.tagline, e('span', { className: 'br' }, ' />')),
               e('h1', { className: 'cv-h1' }, 'Хамзат', e('br'), 'Добриев'),
               e('div', { className: 'cv-role', dangerouslySetInnerHTML: { __html: 'Frontend-разработчик с <b>живым продуктом в продакшне</b> — Назрань · удалённо · готов к релокации' } }),
-              e('div', { className: 'cv-hero-meta' },
-                d.contacts.map((c) => e('a', { className: 'cv-pill', key: c.k, href: c.href, target: '_blank' },
-                  e('span', { className: 'k' }, ICON[c.k] || '·'), c.label)),
-              ),
+              e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
             ),
             e('image-slot', { id: 'cv-photo', class: 'cv-photo', shape: 'rounded', radius: '14', placeholder: 'фото' }),
           ),
@@ -179,7 +205,7 @@
       ),
       // metrics
       e('div', { className: 'cv-metrics' },
-        d.metrics.map((m, i) => e('div', { className: 'cv-metric', key: i },
+        PORTFOLIO.metrics.map((m, i) => e('div', { className: 'cv-metric', key: i },
           e('div', { className: 'v' }, m.value),
           e('div', { className: 'l' }, m.label))),
       ),
@@ -187,14 +213,14 @@
       e('section', { className: 'cv-sec' },
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '00'), 'О себе'),
-          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: d.about.replace('AvtorStudio', '<b>AvtorStudio</b>').replace('полный цикл', '<b>полный цикл</b>') } }),
+          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: aboutHTML } }),
         ),
       ),
       // projects
       e('section', { className: 'cv-sec', id: 'projects' },
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '01'), 'Проекты'),
-          d.portfolio.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
+          PORTFOLIO.projects.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
             e('div', { className: 'cv-proj-media' },
               e('image-slot', { id: p.slot, shape: 'rounded', radius: '10', placeholder: 'скриншот ' + p.name })),
             e('div', null,
@@ -204,7 +230,7 @@
               e('div', { className: 'cv-proj-tag' }, p.tagline),
               e('p', { className: 'cv-proj-desc' }, p.desc),
               e('ul', { className: 'cv-proj-points' }, p.points.map((pt, j) => e('li', { key: j }, pt))),
-              e('div', { className: 'cv-proj-stack' }, p.stack.map((s, j) => e('span', { className: 'cv-stack-chip', key: j }, s))),
+              e('div', { className: 'cv-proj-stack' }, p.stack.map((st, j) => e('span', { className: 'cv-stack-chip', key: j }, st))),
               p.links.length ? e('div', { className: 'cv-proj-links' },
                 p.links.map((l, j) => e('a', { key: j, href: l.href, target: '_blank' }, l.label))) : null,
             ),
@@ -215,16 +241,19 @@
       e('section', { className: 'cv-sec', id: 'experience' },
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '02'), 'Опыт работы'),
-          d.experience.map((x, i) => e('div', { className: 'cv-exp', key: i },
-            e('div', { className: 'cv-exp-when' }, x.period),
-            e('div', null,
-              e('div', { className: 'cv-exp-org' }, x.org),
-              x.unit ? e('div', { className: 'cv-exp-unit' }, x.unit) : null,
-              e('div', { className: 'cv-exp-title' }, x.title),
-              e('ul', { className: 'cv-exp-points' },
-                x.bullets.map((b, j) => e('li', { key: j, dangerouslySetInnerHTML: { __html: b } }))),
-            ),
-          )),
+          d.experience.map((x, i) => {
+            const bullets = (x.bullets || '').split('\n').map(b => b.trim()).filter(Boolean);
+            return e('div', { className: 'cv-exp', key: i },
+              e('div', { className: 'cv-exp-when' }, x.period),
+              e('div', null,
+                e('div', { className: 'cv-exp-org' }, x.org),
+                x.unit ? e('div', { className: 'cv-exp-unit' }, x.unit) : null,
+                e('div', { className: 'cv-exp-title' }, x.title),
+                e('ul', { className: 'cv-exp-points' },
+                  bullets.map((b, j) => e('li', { key: j, dangerouslySetInnerHTML: { __html: inlineRich(b) } }))),
+              ),
+            );
+          }),
         ),
       ),
       // stack
@@ -235,7 +264,8 @@
             d.tech.map((g, i) => e('div', { key: i },
               e('div', { className: 'cv-tech-h' }, g.group.toLowerCase()),
               e('div', { className: 'cv-tech-chips' },
-                g.items.map((it, j) => e('span', { className: 'cv-tech-chip', key: j }, it))),
+                g.items.split(',').map(s => s.trim()).filter(Boolean)
+                  .map((it, j) => e('span', { className: 'cv-tech-chip', key: j }, it))),
             )),
           ),
         ),
@@ -248,7 +278,7 @@
               e('h2', { className: 'cv-sec-h' }, e('span', { className: 'idx' }, '04'), 'Образование'),
               d.education.map((ed, i) => e('div', { className: 'cv-edu', key: i },
                 e('div', { className: 'cv-edu-school' }, ed.school),
-                e('div', { className: 'cv-edu-prog' }, ed.program),
+                e('div', { className: 'cv-edu-prog' }, ed.prog),
                 e('div', { className: 'cv-edu-when' }, ed.period))),
             ),
             e('div', null,
@@ -264,9 +294,7 @@
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-foot-h' }, 'Давайте поработаем вместе'),
           e('div', { className: 'cv-foot-sub' }, 'Открыт к предложениям — Frontend / React · готов к релокации'),
-          e('div', { className: 'cv-foot-links' },
-            d.contacts.map((c) => e('a', { className: 'cv-pill', key: c.k, href: c.href, target: '_blank' },
-              e('span', { className: 'k' }, ICON[c.k] || '·'), c.label))),
+          e('div', { className: 'cv-foot-links' }, cs.map((c, i) => pill(c, i, e))),
           e('div', { className: 'cv-foot-copy' }, '© 2026 Хамзат Добриев · собрано вручную на React'),
         ),
       ),
