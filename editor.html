@@ -403,7 +403,7 @@ input[type=file] { display: none; }
         <button class="btn-mini" id="btnExport" title="Сохранить данные в файл .json">↓ Экспорт</button>
         <button class="btn-mini" id="btnImport" title="Загрузить данные из файла .json">↑ Импорт</button>
         <input type="file" id="importFile" accept="application/json,.json">
-        <button class="btn-mini" id="btnPublish" title="Сгенерировать resume-data.js для коммита в репозиторий — единое резюме для всех браузеров">⤴ Опубликовать в файл</button>
+        <button class="btn-mini" id="btnPublish" title="Опубликовать резюме на GitHub — обновится для всех">⤴ Опубликовать</button>
         <button class="btn-mini danger" id="btnReset" title="Сбросить к исходному резюме">⟲ Сброс</button>
         <span class="page-badge ok" id="pageBadge"><span class="dot"></span>1 страница</span>
       </div>
@@ -725,19 +725,22 @@ function exportJSON(){
   a.download = `resume-${(state.profile.name||'data').trim().replace(/\s+/g,'-')}.json`;
   a.click(); URL.revokeObjectURL(a.href);
 }
-// Генерирует полный resume-data.js (резюме из редактора + неизменный PORTFOLIO),
-// чтобы заменить им файл в репозитории и закоммитить — тогда резюме одинаково во всех браузерах.
-function publishToFile(){
+/* ════════════════════════════════════════════════════════════
+   PUBLISH TO GITHUB — обновляет resume-data.js в репозитории
+   через GitHub Contents API. После этого GitHub Pages пересобирается
+   и все посетители видят новую версию (~30 сек).
+   ════════════════════════════════════════════════════════════ */
+const GH_OWNER = 'XDobriev';
+const GH_REPO  = 'cv-editor';
+const GH_FILE  = 'resume-data.js';
+const GH_TOKEN_KEY = 'gh-publish-token';
+
+function buildResumeDataJS(){
   const indent = s => s.replace(/\n/g, '\n  ');
   const resumeJson = indent(JSON.stringify(state, null, 2));
   const portfolioJson = indent(JSON.stringify(window.PORTFOLIO || {}, null, 2));
-  const file =
-`/* ════════════════════════════════════════════════════════════
+  return `/* ════════════════════════════════════════════════════════════
    ЕДИНЫЙ ИСТОЧНИК ДАННЫХ
-   ─ RESUME_DATA — содержимое резюме в формате редактора (editor.html).
-                   Его же читают онлайн-резюме (resume.html) и портфолио.
-   ─ PORTFOLIO    — дополнительные данные только для лендинга-портфолио
-                   (метрики и расширенные карточки проектов).
    ════════════════════════════════════════════════════════════ */
 (function (root) {
 
@@ -751,11 +754,68 @@ function publishToFile(){
 
 })(typeof window !== 'undefined' ? window : globalThis);
 `;
-  const blob = new Blob([file], { type: 'application/javascript' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'resume-data.js';
-  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function getGHToken(){
+  let token = localStorage.getItem(GH_TOKEN_KEY);
+  if (token) return token;
+  token = prompt(
+    'Для публикации нужен GitHub Personal Access Token.\n\n' +
+    '1. Открой github.com → Settings → Developer settings → Fine-grained tokens\n' +
+    '2. Создай токен с доступом к репо «' + GH_REPO + '» (Contents: Read and write)\n' +
+    '3. Вставь токен сюда:\n\n' +
+    'Токен сохранится в браузере. Удалить: localStorage.removeItem("' + GH_TOKEN_KEY + '")'
+  );
+  if (!token) return null;
+  localStorage.setItem(GH_TOKEN_KEY, token.trim());
+  return token.trim();
+}
+
+async function publishToGitHub(){
+  const token = getGHToken();
+  if (!token) return;
+
+  const btn = document.getElementById('btnPublish');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Публикация…';
+  btn.disabled = true;
+
+  try {
+    const apiBase = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
+    const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+
+    const meta = await fetch(apiBase, { headers }).then(r => {
+      if (r.status === 401) throw new Error('Токен недействителен. Удали старый: localStorage.removeItem("' + GH_TOKEN_KEY + '")');
+      if (r.status === 404) throw new Error('Файл ' + GH_FILE + ' не найден в репозитории');
+      if (!r.ok) throw new Error('GitHub API: ' + r.status);
+      return r.json();
+    });
+
+    const content = buildResumeDataJS();
+    const encoded = btoa(unescape(encodeURIComponent(content)));
+
+    const put = await fetch(apiBase, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'update: резюме обновлено из редактора',
+        content: encoded,
+        sha: meta.sha,
+      }),
+    });
+    if (!put.ok) {
+      const err = await put.json().catch(() => ({}));
+      throw new Error(err.message || 'Ошибка записи: ' + put.status);
+    }
+
+    btn.textContent = '✓ Опубликовано!';
+    btn.style.borderColor = '#7FB069'; btn.style.color = '#7FB069';
+    setTimeout(() => { btn.textContent = orig; btn.style.borderColor = ''; btn.style.color = ''; btn.disabled = false; }, 3000);
+  } catch (e) {
+    alert('Ошибка публикации:\n' + e.message);
+    btn.textContent = orig; btn.disabled = false;
+    if (/Токен недействителен/.test(e.message)) localStorage.removeItem(GH_TOKEN_KEY);
+  }
 }
 function importJSON(file){
   const reader = new FileReader();
@@ -860,7 +920,7 @@ document.getElementById('compactToggle').addEventListener('change', e=>{
 
 // экспорт/импорт/сброс
 document.getElementById('btnExport').addEventListener('click', exportJSON);
-document.getElementById('btnPublish').addEventListener('click', publishToFile);
+document.getElementById('btnPublish').addEventListener('click', publishToGitHub);
 document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e=>{ if (e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
 document.getElementById('btnReset').addEventListener('click', resetAll);

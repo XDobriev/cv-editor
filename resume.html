@@ -174,13 +174,12 @@
 <script src="resume-data.js"></script>
 <script src="resume-render.js"></script>
 <script>
-  // данные: единый источник — resume-data.js (файл в репозитории), одинаковый во всех браузерах.
-  // локальный черновик из редактора подмешиваем только в режиме предпросмотра (?draft).
+  // данные: файл resume-data.js + правки из localStorage (если есть в этом браузере).
+  // У работодателей localStorage пуст → видят зафиксированную версию из GitHub.
   function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
   let state = deepClone(window.RESUME_DATA);
   try {
-    const isDraft = new URLSearchParams(location.search).has('draft');
-    const raw = isDraft ? localStorage.getItem('resume-editor-state-v2') : null;
+    const raw = localStorage.getItem('resume-editor-state-v2');
     if (raw) state = Object.assign(deepClone(window.RESUME_DATA), JSON.parse(raw));
   } catch (e) {}
 
