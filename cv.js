@@ -22,6 +22,17 @@
       transition:background .2s,color .2s;}
     .cv-dl:hover{background:var(--accent);color:#fff;}
 
+    /* CTA */
+    .cv-cta{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+      color:#fff;background:var(--accent);border-radius:8px;padding:12px 24px;text-decoration:none;
+      transition:background .2s,transform .1s,box-shadow .2s;box-shadow:0 4px 16px rgba(255,107,53,.25);}
+    .cv-cta:hover{background:#E5793F;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,53,.35);}
+    .cv-cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;}
+    .cv-cta-sec{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+      color:var(--accent);border:1.5px solid var(--accent);border-radius:8px;padding:11px 22px;
+      text-decoration:none;background:transparent;transition:background .2s,color .2s;}
+    .cv-cta-sec:hover{background:var(--accent);color:#fff;}
+
     /* hero */
     .cv-hero{padding:100px 0 80px;background:var(--bg);}
     .cv-wrap{max-width:1060px;margin:0 auto;padding:0 32px;box-sizing:border-box;}
@@ -198,10 +209,14 @@
               e('span', { className: 'cv-label' }, 'React · TypeScript · 4+ года'),
               e('h1', { className: 'cv-h1' }, 'Хамзат Добриев'),
               e('div', { className: 'cv-role' },
-                'Строю продукты от первого коммита до ',
-                e('strong', null, 'живых пользователей'),
-                ' — Назрань · удалённо · готов к релокации'),
+                'Превращаю бизнес-задачи в ',
+                e('strong', null, 'работающие веб-продукты'),
+                ' — от прототипа до продакшна. Открыт к предложениям, готов к релокации'),
               e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
+              e('div', { className: 'cv-cta-row' },
+                e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank' }, '◇ Написать в Telegram'),
+                e('a', { className: 'cv-cta-sec', href: 'resume.html' }, '↓ Скачать резюме'),
+              ),
             ),
             PORTFOLIO.photo
               ? e('img', { className: 'cv-photo', src: PORTFOLIO.photo, alt: 'Хамзат Добриев' })
@@ -225,9 +240,7 @@
       e('section', { className: 'cv-sec' },
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-sec-h' }, 'О ', e('span', { className: 'accent' }, 'себе')),
-          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: inlineRich(d.about)
-            .replace('AvtorStudio', '<strong>AvtorStudio</strong>')
-            .replace('полный цикл', '<strong>полный цикл</strong>') } }),
+          e('p', { className: 'cv-about', dangerouslySetInnerHTML: { __html: inlineRich(d.about) } }),
         ),
       ),
       // projects
@@ -308,8 +321,12 @@
       // contact footer
       e('footer', { className: 'cv-sec cv-foot', id: 'contact', style: { borderBottom: 'none' } },
         e('div', { className: 'cv-wrap' },
-          e('h2', { className: 'cv-foot-h' }, 'Готов к новым проектам'),
-          e('div', { className: 'cv-foot-sub' }, 'Frontend · React — Назрань · удалённо · открыт к релокации'),
+          e('h2', { className: 'cv-foot-h' }, 'Обсудим вашу задачу?'),
+          e('div', { className: 'cv-foot-sub' }, 'Ищу позицию Frontend-разработчика в продуктовой команде — удалённо или с релокацией'),
+          e('div', { className: 'cv-cta-row', style: { justifyContent: 'center', marginTop: '24px', marginBottom: '24px' } },
+            e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank' }, '◇ Написать в Telegram'),
+            e('a', { className: 'cv-cta-sec', href: 'mailto:XDobriev@yandex.ru' }, '✉ Написать на почту'),
+          ),
           e('div', { className: 'cv-foot-links' }, cs.map((c, i) => pill(c, i, e))),
           e('div', { className: 'cv-foot-copy' }, '© 2026 Хамзат Добриев'),
         ),
