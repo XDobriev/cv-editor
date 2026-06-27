@@ -187,7 +187,8 @@
   (function applyAccent(hex){
     if (!hex) return;
     const h2 = x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,'0');
-    const m = hex.replace('#',''); const r = parseInt(m.slice(0,2),16), g = parseInt(m.slice(2,4),16), b = parseInt(m.slice(4,6),16);
+    let m = hex.replace('#',''); if (m.length === 3) m = m.split('').map(x => x + x).join('');
+    const r = parseInt(m.slice(0,2),16), g = parseInt(m.slice(2,4),16), b = parseInt(m.slice(4,6),16);
     if ([r,g,b].some(isNaN)) return;
     const root = document.documentElement.style;
     root.setProperty('--accent', hex);

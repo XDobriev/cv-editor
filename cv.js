@@ -169,8 +169,30 @@
     return '·';
   }
 
-  function contacts() {
-    return RESUME_DATA.contacts
+  function getResumeData() {
+    try {
+      var raw = localStorage.getItem('resume-editor-state-v2');
+      if (raw) {
+        var base = JSON.parse(JSON.stringify(RESUME_DATA));
+        return Object.assign(base, JSON.parse(raw));
+      }
+    } catch(e) {}
+    return RESUME_DATA;
+  }
+
+  function getPortfolioData() {
+    try {
+      var raw = localStorage.getItem('resume-editor-portfolio-v2');
+      if (raw) {
+        var base = JSON.parse(JSON.stringify(PORTFOLIO));
+        return Object.assign(base, JSON.parse(raw));
+      }
+    } catch(e) {}
+    return PORTFOLIO;
+  }
+
+  function contacts(d) {
+    return d.contacts
       .filter(c => (c.value || '').trim())
       .map(c => ({ icon: iconFor(c.key), label: c.value, href: buildHref(c.key, c.value) }));
   }
@@ -178,14 +200,15 @@
   function pill(c, i, e) {
     const inner = [e('span', { className: 'k' }, c.icon), c.label];
     return c.href
-      ? e('a', { className: 'cv-pill', key: i, href: c.href, target: '_blank' }, ...inner)
+      ? e('a', { className: 'cv-pill', key: i, href: c.href, target: '_blank', rel: 'noopener' }, ...inner)
       : e('span', { className: 'cv-pill', key: i }, ...inner);
   }
 
   function WebCV() {
-    const d = RESUME_DATA;
+    const d = getResumeData();
+    const pf = getPortfolioData();
     const e = React.createElement;
-    const cs = contacts();
+    const cs = contacts(d);
 
     return e('div', { className: 'cv' },
       // top bar
@@ -214,12 +237,12 @@
                 ' — от прототипа до продакшна. Открыт к предложениям, готов к релокации'),
               e('div', { className: 'cv-hero-meta' }, cs.map((c, i) => pill(c, i, e))),
               e('div', { className: 'cv-cta-row' },
-                e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank' }, '◇ Написать в Telegram'),
+                e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank', rel: 'noopener' }, '◇ Написать в Telegram'),
                 e('a', { className: 'cv-cta-sec', href: 'resume.html' }, '↓ Скачать резюме'),
               ),
             ),
-            PORTFOLIO.photo
-              ? e('img', { className: 'cv-photo', src: PORTFOLIO.photo, alt: 'Хамзат Добриев' })
+            pf.photo
+              ? e('img', { className: 'cv-photo', src: pf.photo, alt: d.profile.name })
               : e('image-slot', { class: 'cv-photo', placeholder: 'фото' }),
           ),
         ),
@@ -228,11 +251,9 @@
       e('div', { className: 'cv-impact' },
         e('div', { className: 'cv-wrap' },
           e('p', { className: 'cv-impact-text', dangerouslySetInnerHTML: { __html:
-            'Запустил собственный SaaS и автоматизировал процессы на курорте Армхи: ' +
-            '<strong class="num">−10 мин</strong> ожидания на ресепшене, ' +
-            '<strong class="num">−90%</strong> звонков в колл-центр, ' +
-            '<strong class="num">40 000 ₽/мес</strong> экономии для бизнеса. ' +
-            '<strong>4+ года</strong> превращаю задачи бизнеса в работающий код.'
+            pf.metrics.map(function(m) {
+              return '<strong class="num">' + m.value + '</strong> ' + m.label;
+            }).join(' · ') + '.'
           }}),
         ),
       ),
@@ -247,7 +268,7 @@
       e('section', { className: 'cv-sec', id: 'projects' },
         e('div', { className: 'cv-wrap' },
           e('h2', { className: 'cv-sec-h' }, 'Про', e('span', { className: 'accent' }, 'екты')),
-          PORTFOLIO.projects.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
+          pf.projects.map((p, i) => e('div', { className: 'cv-proj' + (i % 2 ? ' rev' : ''), key: p.id },
             e('div', { className: 'cv-proj-media' },
               p.img
                 ? e('img', { src: p.img, alt: 'Скриншот ' + p.name, loading: 'lazy' })
@@ -261,7 +282,7 @@
               e('ul', { className: 'cv-proj-points' }, p.points.map((pt, j) => e('li', { key: j }, pt))),
               e('div', { className: 'cv-proj-stack' }, p.stack.map((st, j) => e('span', { className: 'cv-stack-chip', key: j }, st))),
               p.links.length ? e('div', { className: 'cv-proj-links' },
-                p.links.map((l, j) => e('a', { key: j, href: l.href, target: '_blank' }, l.label))) : null,
+                p.links.map((l, j) => e('a', { key: j, href: l.href, target: '_blank', rel: 'noopener' }, l.label))) : null,
             ),
           )),
         ),
@@ -324,7 +345,7 @@
           e('h2', { className: 'cv-foot-h' }, 'Обсудим вашу задачу?'),
           e('div', { className: 'cv-foot-sub' }, 'Ищу позицию Frontend-разработчика в продуктовой команде — удалённо или с релокацией'),
           e('div', { className: 'cv-cta-row', style: { justifyContent: 'center', marginTop: '24px', marginBottom: '24px' } },
-            e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank' }, '◇ Написать в Telegram'),
+            e('a', { className: 'cv-cta', href: 'https://t.me/XDobriev', target: '_blank', rel: 'noopener' }, '◇ Написать в Telegram'),
             e('a', { className: 'cv-cta-sec', href: 'mailto:XDobriev@yandex.ru' }, '✉ Написать на почту'),
           ),
           e('div', { className: 'cv-foot-links' }, cs.map((c, i) => pill(c, i, e))),
